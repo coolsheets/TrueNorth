@@ -1,1 +1,26 @@
-// index.html - see canvas for full content
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="description" content="PPI Canada — Buyer-focused pre-purchase inspection PWA" />
+
+    <!-- PWA manifest (VitePWA will also inject; keeping this explicit is fine) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Icons (ensure these exist in app/public/icons/) -->
+    <link rel="icon" href="/icons/icon-192.png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+    <title>PPI Canada</title>
+  </head>
+  <body>
+    <noscript>This app requires JavaScript enabled.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

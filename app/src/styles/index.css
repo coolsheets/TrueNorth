@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global base styles */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 font-sans antialiased;
+}
+
+/* Links */
+a {
+  @apply text-sky-400 hover:text-sky-300 transition-colors;
+}
+
+/* Buttons */
+button {
+  @apply px-3 py-1.5 rounded-md font-medium bg-sky-600 text-white hover:bg-sky-500 transition;
+}
+
+/* Card utility */
+.card {
+  @apply bg-slate-900 border border-slate-800 rounded-xl p-4 shadow;
+}
+
+/* Headings */
+h1, h2, h3 {
+  @apply font-semibold tracking-tight;
+}
