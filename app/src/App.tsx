@@ -1,7 +1,8 @@
 // app/src/App.tsx
-import { Link as RouterLink, Outlet, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Box, Container, Link, Stack } from "@mui/material";
 import OfflineBadge from "./components/OfflineBadge";
+import Routes from "./routes";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -55,7 +56,7 @@ export default function App() {
       <OfflineBadge />
 
       <Container component="main" sx={{ flexGrow: 1, py: 2, maxWidth: 'md' }}>
-        <Outlet />
+        <Routes />
       </Container>
 
       <Box component="footer" sx={{ 
