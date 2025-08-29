@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import { env } from './env';
-import health from './routes/health';
-import inspections from './routes/inspections';
-import ai from './routes/ai';
+const express = require('express');
+const cors = require('cors');
+const { env } = require('./env');
+const health = require('./routes/health');
+const inspections = require('./routes/inspections');
+const ai = require('./routes/ai');
 
 
 const app = express();
@@ -16,4 +16,4 @@ app.use('/api/inspections', inspections);
 app.use('/api/ai', ai);
 
 
-export default app;
+module.exports = app;

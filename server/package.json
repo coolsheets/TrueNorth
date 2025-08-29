@@ -1,10 +1,9 @@
 {
   "name": "ppi-canada-server",
   "version": "0.1.0",
-  "type": "module",
   "main": "src/server.ts",
   "scripts": {
-  "dev": "ts-node-dev --respawn --transpile-only --esm --prefer-ts-exts src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },

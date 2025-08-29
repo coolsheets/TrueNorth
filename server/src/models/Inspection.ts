@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+const { Schema, model } = require('mongoose');
 
 
 const ItemSchema = new Schema({
@@ -34,4 +34,4 @@ updatedAt: { type: Date, default: Date.now }
 });
 
 
-export default model('Inspection', InspectionSchema);
+module.exports = model('Inspection', InspectionSchema);

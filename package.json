@@ -14,8 +14,7 @@
 		"preview": "npm --prefix app run preview",
 		"lint": "eslint \"{app,server}/**/*.{ts,tsx,js}\"",
 		"test": "npm --prefix app run test",
-		"e2e": "playwright test",
-		"build:css": "tailwindcss -i ./app/src/styles/index.css -o ./app/dist/output.css --minify"
+		"e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.30",

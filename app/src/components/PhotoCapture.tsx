@@ -1,12 +1,38 @@
 import { useRef } from 'react';
+import { Button, Box } from '@mui/material';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
-export default function PhotoCapture({ onSelect }: { onSelect: (file: File) => void }){
+interface PhotoCaptureProps {
+  onSelect: (file: File) => void;
+}
+
+export default function PhotoCapture({ onSelect }: PhotoCaptureProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onSelect(file);
+    }
+  };
+  
   return (
-    <div className="flex items-center gap-2">
-      <button className="px-3 py-1.5 rounded bg-sky-600" onClick={() => inputRef.current?.click()}>Add Photo</button>
-      <input ref={inputRef} type="file" accept="image/*" capture="environment" className="hidden"
-             onChange={e => { const f=e.target.files?.[0]; if (f) onSelect(f); }} />
-    </div>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Button 
+        variant="contained" 
+        startIcon={<CameraAltIcon />}
+        onClick={() => inputRef.current?.click()}
+      >
+        Add Photo
+      </Button>
+      <input 
+        ref={inputRef} 
+        type="file" 
+        accept="image/*" 
+        capture="environment" 
+        style={{ display: 'none' }}
+        onChange={handleFileChange} 
+      />
+    </Box>
   );
 }
