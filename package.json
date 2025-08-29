@@ -1,1 +1,34 @@
-{"name":"TrueNorth","private":true,"type":"module","workspaces":["app","server"],"scripts":{"bootstrap":"npm --prefix app i && npm --prefix server i","dev":"concurrently \"npm:dev:server\" \"npm:dev:app\"","dev:app":"npm --prefix app run dev","dev:server":"npm --prefix server run dev","build":"npm --prefix app run build && npm --prefix server run build","preview":"npm --prefix app run preview","lint":"eslint \"{app,server}/**/*.{ts,tsx,js}\"","test":"npm --prefix app run test","e2e":"playwright test"},"devDependencies":{"@types/node":"^20.11.30","concurrently":"^8.2.2","eslint":"^9.5.0","playwright":"^1.47.0","prettier":"^3.3.3"}}
+{
+	"name": "true-north",
+	"private": true,
+	"workspaces": [
+		"app",
+		"server"
+	],
+	"scripts": {
+		"bootstrap": "npm --prefix app i && npm --prefix server i",
+		"dev": "concurrently \"npm:dev:server\" \"npm:dev:app\"",
+		"dev:app": "npm --prefix app run dev",
+		"dev:server": "npm --prefix server run dev",
+		"build": "npm --prefix app run build && npm --prefix server run build",
+		"preview": "npm --prefix app run preview",
+		"lint": "eslint \"{app,server}/**/*.{ts,tsx,js}\"",
+		"test": "npm --prefix app run test",
+		"e2e": "playwright test",
+		"build:css": "tailwindcss -i ./app/src/styles/index.css -o ./app/dist/output.css --minify"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.30",
+		"@typescript-eslint/eslint-plugin": "^8.41.0",
+		"@typescript-eslint/parser": "^8.41.0",
+		"autoprefixer": "^10.4.21",
+		"concurrently": "^8.2.2",
+		"eslint": "^9.5.0",
+		"eslint-plugin-react": "^7.37.5",
+		"eslint-plugin-react-hooks": "^5.2.0",
+		"playwright": "^1.47.0",
+		"postcss": "^8.5.6",
+		"prettier": "^3.3.3",
+		"tailwindcss": "^3.4.7"
+	}
+}
