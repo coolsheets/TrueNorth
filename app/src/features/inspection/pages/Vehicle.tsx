@@ -36,92 +36,94 @@ export default function Vehicle() {
     province: ""
   });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [alert, setAlert] = useState<string | null>(null);
 
-  // Load draft
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!draftId) return setError("Missing draftId");
-      const d = await db.drafts.get(draftId);
-      if (!mounted) return;
-      if (!d) return setError("Draft not found");
-      setDraft(d);
-      setForm({
-        vin: d.vehicle?.vin || "",
-        year: d.vehicle?.year,
-        make: d.vehicle?.make || "",
-        model: d.vehicle?.model || "",
-        odo: d.vehicle?.odo,
-        province: d.vehicle?.province || ""
-      });
-    })();
-    return () => { mounted = false; };
-  }, [draftId]);
-
-  async function saveAndNext() {
-    setError(null);
-
-    // Minimal validation
-    if (!form.vin.trim()) return setError("VIN is required.");
-    if (form.year && (form.year < 1970 || form.year > new Date().getFullYear() + 1)) {
-      return setError("Enter a valid model year.");
+    async function loadDraft() {
+      if (!draftId) {
+        nav("/");
+        return;
+      }
+      
+      try {
+        const draft = await db.drafts.get(draftId);
+        if (!draft) {
+          nav("/");
+          return;
+        }
+        setDraft(draft);
+        setForm({
+          vin: draft.vehicle.vin || "",
+          year: draft.vehicle.year,
+          make: draft.vehicle.make || "",
+          model: draft.vehicle.model || "",
+          odo: draft.vehicle.odo,
+          province: draft.vehicle.province || ""
+        });
+      } catch (err) {
+        console.error("Error loading draft", err);
+        setAlert("Error loading draft");
+      }
     }
-    if (form.odo && form.odo < 0) return setError("Odometer must be ≥ 0.");
+    
+    loadDraft();
+  }, [draftId, nav]);
 
+  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value, type } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === "number" ? (value ? Number(value) : undefined) : value
+    }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    
+    if (!draft || !draftId) return;
+    
     setSaving(true);
     try {
-      await db.drafts.update(draftId, {
+      // Update the draft with the form data
+      const updated = {
+        ...draft,
         vehicle: {
-          vin: form.vin.trim(),
-          year: form.year ? Number(form.year) : undefined,
-          make: form.make.trim(),
-          model: form.model.trim(),
-          odo: form.odo ? Number(form.odo) : undefined,
-          province: form.province.trim()
+          vin: form.vin,
+          year: form.year,
+          make: form.make,
+          model: form.model,
+          odo: form.odo,
+          province: form.province
         },
         updatedAt: Date.now()
-      });
-
-      // Go to the first inspection section (adjust route if needed)
-      nav(`/exterior?draftId=${draftId}`);
+      };
+      
+      await db.drafts.update(draftId, updated);
+      nav("/exterior?draftId=" + draftId);
+    } catch (err) {
+      console.error("Error saving draft", err);
+      setAlert("Error saving draft");
     } finally {
       setSaving(false);
     }
   }
 
-  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value } = e.target;
-    setForm((f) => ({
-      ...f,
-      [name]:
-        name === "year" || name === "odo"
-          ? value === "" ? undefined : Number(value)
-          : value
-    }));
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    void saveAndNext();
-  };
-
   return (
     <Stack spacing={3}>
       <Card>
         <Typography variant="h4" component="h1" gutterBottom>
-          Vehicle Basics
+          Vehicle Details
         </Typography>
-        <Typography color="text.secondary" paragraph sx={{ mb: 3 }}>
-          Enter core details to anchor your inspection and final report.
+        <Typography color="text.secondary" paragraph>
+          Enter basic information about the vehicle you're inspecting.
         </Typography>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
+        
+        {alert && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {alert}
           </Alert>
         )}
-
+        
         {!draft ? (
           <Typography color="text.secondary">
             Loading draft…
@@ -198,10 +200,10 @@ export default function Vehicle() {
                   type="number"
                   value={form.odo ?? ""}
                   onChange={onChange}
-                  placeholder="131376"
+                  placeholder="125000"
                   variant="outlined"
                   fullWidth
-                  inputProps={{ min: 0, step: 1 }}
+                  inputProps={{ min: 0 }}
                   margin="normal"
                   size="small"
                 />
@@ -213,7 +215,7 @@ export default function Vehicle() {
                   label="Province"
                   value={form.province}
                   onChange={onChange}
-                  placeholder="AB"
+                  placeholder="ON"
                   variant="outlined"
                   fullWidth
                   margin="normal"
@@ -223,7 +225,7 @@ export default function Vehicle() {
 
               <Grid item xs={12}>
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                  <Button
+                  <Button 
                     type="submit"
                     variant="contained"
                     disabled={saving}

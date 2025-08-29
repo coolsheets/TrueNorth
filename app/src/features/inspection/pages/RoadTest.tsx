@@ -1,10 +1,15 @@
-import React from 'react';
+import { Typography } from "@mui/material";
+import Card from "../../../components/Card";
 
 export default function RoadTest(){
   return (
-    <div className="card">
-      <h1 className="text-xl">Road Test</h1>
-      <p className="text-slate-400">Road Test page placeholder</p>
-    </div>
+    <Card>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Road Test
+      </Typography>
+      <Typography color="text.secondary">
+        Road Test page placeholder
+      </Typography>
+    </Card>
   );
 }

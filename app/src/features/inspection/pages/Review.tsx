@@ -1,10 +1,15 @@
-import React from 'react';
+import { Typography } from "@mui/material";
+import Card from "../../../components/Card";
 
 export default function Review(){
   return (
-    <div className="card">
-      <h1 className="text-xl">Review</h1>
-      <p className="text-slate-400">Review page placeholder</p>
-    </div>
+    <Card>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Review
+      </Typography>
+      <Typography color="text.secondary">
+        Review page placeholder
+      </Typography>
+    </Card>
   );
 }

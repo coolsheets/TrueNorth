@@ -1,10 +1,15 @@
-import React from 'react';
+import { Typography } from "@mui/material";
+import Card from "../../../components/Card";
 
 export default function Interior(){
   return (
-    <div className="card">
-      <h1 className="text-xl">Interior</h1>
-      <p className="text-slate-400">Interior page placeholder</p>
-    </div>
+    <Card>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Interior
+      </Typography>
+      <Typography color="text.secondary">
+        Interior page placeholder
+      </Typography>
+    </Card>
   );
 }

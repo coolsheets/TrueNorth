@@ -1,10 +1,15 @@
-import React from 'react';
+import { Typography } from "@mui/material";
+import Card from "../../../components/Card";
 
 export default function EngineBay(){
   return (
-    <div className="card">
-      <h1 className="text-xl">Engine Bay</h1>
-      <p className="text-slate-400">Engine Bay page placeholder</p>
-    </div>
+    <Card>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Engine Bay
+      </Typography>
+      <Typography color="text.secondary">
+        Engine Bay page placeholder
+      </Typography>
+    </Card>
   );
 }
