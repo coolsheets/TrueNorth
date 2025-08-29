@@ -68,7 +68,7 @@ export default function Export() {
       let summary = null;
       if (includeSummary) {
         try {
-          const response = await fetch('http://localhost:8080/api/ai/summarize', {
+          const response = await fetch('/api/ai/summarize', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export default function Export() {
       
       // Save the inspection to the server if it's connected
       try {
-        const response = await fetch('http://localhost:8080/api/inspections', {
+        const response = await fetch('/api/inspections', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

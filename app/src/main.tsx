@@ -5,6 +5,19 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import App from './App';
 import theme from './styles/theme';
 import './styles/index.css';
+import { registerSW } from 'virtual:pwa-register';
+
+// Register service worker for PWA
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('New version available. Reload?')) {
+      updateSW(true);
+    }
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline');
+  },
+});
 
 // Opt into future behavior for React Router
 const routerOptions = {

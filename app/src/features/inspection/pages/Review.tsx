@@ -77,7 +77,7 @@ export default function Review() {
     
     setSummarizing(true);
     try {
-      const response = await fetch('http://localhost:8080/api/ai/summarize', {
+      const response = await fetch('/api/ai/summarize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
