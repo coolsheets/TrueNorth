@@ -117,6 +117,12 @@ export default function Export() {
         
         if (response.ok) {
           console.log("Inspection saved to server");
+          // Mark as synced in local database
+          await db.drafts.update(draftId, {
+            ...draft,
+            synced: true,
+            syncedAt: new Date().toISOString()
+          });
         }
       } catch (error) {
         console.error("Error saving to server", error);

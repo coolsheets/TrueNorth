@@ -8,10 +8,15 @@ import {
   Grid,
   TextField,
   Alert,
-  CircularProgress
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  Snackbar
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import Card from "../../../components/Card";
 import { db, type InspectionDraft } from "../db";
+import { decodeVin, validateVin } from "../../../utils/vin";
 
 type VehicleForm = {
   vin: string;
@@ -36,7 +41,9 @@ export default function Vehicle() {
     province: ""
   });
   const [saving, setSaving] = useState(false);
+  const [lookingUpVin, setLookingUpVin] = useState(false);
   const [alert, setAlert] = useState<string | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDraft() {
@@ -75,6 +82,44 @@ export default function Vehicle() {
       ...prev,
       [name]: type === "number" ? (value ? Number(value) : undefined) : value
     }));
+  }
+
+  // Function to handle VIN lookup
+  async function handleVinLookup() {
+    if (!form.vin || form.vin.length !== 17) {
+      setAlert("Please enter a valid 17-character VIN");
+      return;
+    }
+
+    if (!validateVin(form.vin)) {
+      setAlert("Invalid VIN format. VINs contain only alphanumeric characters (excluding I, O, Q)");
+      return;
+    }
+
+    setLookingUpVin(true);
+    setAlert(null);
+
+    try {
+      const result = await decodeVin(form.vin);
+      
+      if (result.success && result.data) {
+        // Update form with decoded vehicle information
+        setForm(prev => ({
+          ...prev,
+          year: result.data.year ? parseInt(result.data.year) : undefined,
+          make: result.data.make || prev.make,
+          model: result.data.model || prev.model
+        }));
+        setNotification("VIN decoded successfully!");
+      } else {
+        setAlert(result.error || "Failed to decode VIN. Please enter vehicle details manually.");
+      }
+    } catch (error) {
+      console.error("Error looking up VIN:", error);
+      setAlert("Error looking up VIN. Please enter vehicle details manually.");
+    } finally {
+      setLookingUpVin(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -143,7 +188,24 @@ export default function Vehicle() {
                   required
                   margin="normal"
                   size="small"
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title="Lookup vehicle info from VIN">
+                        <IconButton 
+                          onClick={handleVinLookup} 
+                          disabled={lookingUpVin || !form.vin || form.vin.length !== 17}
+                          size="small"
+                          edge="end"
+                        >
+                          {lookingUpVin ? <CircularProgress size={20} /> : <SearchIcon />}
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
                 />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Enter a valid 17-character VIN and click the search icon to auto-populate vehicle information
+                </Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -250,6 +312,15 @@ export default function Vehicle() {
         Your entries are stored locally (offline) and synced later. VIN/year improve
         future features (CARFAX attach, value adjustments).
       </Typography>
+
+      {/* Success notification */}
+      <Snackbar
+        open={!!notification}
+        autoHideDuration={5000}
+        onClose={() => setNotification(null)}
+        message={notification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Stack>
   );
 }
