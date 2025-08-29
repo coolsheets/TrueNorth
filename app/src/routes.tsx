@@ -12,16 +12,16 @@ import Export from './features/inspection/pages/Export';
 
 export default function Routes(){
   return useRoutes([
-    { path: '/', element: <Start /> },
-    { path: '/start', element: <Start /> },
-    { path: '/vehicle', element: <Vehicle /> },
-    { path: '/exterior', element: <Exterior /> },
-    { path: '/rust', element: <Rust /> },
-    { path: '/engine', element: <EngineBay /> },
-    { path: '/interior', element: <Interior /> },
-    { path: '/road', element: <RoadTest /> },
-    { path: '/post', element: <PostDrive /> },
-    { path: '/review', element: <Review /> },
-    { path: '/export', element: <Export /> }
+  { path: '/', element: <Start /> },
+  { path: '/start', element: <Start /> },
+  { path: '/vehicle', element: <Vehicle /> },
+  { path: '/exterior', element: <Exterior /> },
+  { path: '/rust', element: <Rust /> },
+  { path: '/engine', element: <EngineBay /> },
+  { path: '/interior', element: <Interior /> },
+  { path: '/road', element: <RoadTest /> },
+  { path: '/post', element: <PostDrive /> },
+  { path: '/review', element: <Review /> },
+  { path: '/export', element: <Export /> }
   ]);
 }
