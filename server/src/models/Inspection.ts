@@ -5,14 +5,14 @@ const ItemSchema = new Schema({
 id: String,
 label: String,
 status: { type: String, enum: ['ok','warn','fail','na'], default: 'ok' },
-notes: String,
-photos: [String]
+notes: { type: String, default: '' },
+photos: { type: [String], default: [] }
 }, { _id: false });
 
 
 const SectionSchema = new Schema({
 name: String,
-items: [ItemSchema]
+items: { type: [ItemSchema], default: [] }
 }, { _id: false });
 
 

@@ -2,6 +2,7 @@
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Box, Container, Link, Stack } from "@mui/material";
 import OfflineBadge from "./components/OfflineBadge";
+import SyncIndicator from "./components/SyncIndicator";
 import Routes from "./routes";
 
 export default function App() {
@@ -58,6 +59,8 @@ export default function App() {
       <Container component="main" sx={{ flexGrow: 1, py: 2, maxWidth: 'md' }}>
         <Routes />
       </Container>
+      
+      <SyncIndicator />
 
       <Box component="footer" sx={{ 
         py: 2, 

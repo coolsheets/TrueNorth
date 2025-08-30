@@ -10,8 +10,39 @@ res.json(list);
 
 
 router.post('/', async (req, res) => {
-const doc = await Inspection.create(req.body);
-res.status(201).json(doc);
+try {
+  console.log('Received inspection creation request');
+  console.log('Request body:', JSON.stringify(req.body).slice(0, 200) + '...');
+
+  if (!req.body.vehicle || !req.body.sections) {
+    console.error('Missing required fields in request');
+    return res.status(400).json({ error: 'Missing required vehicle or sections data' });
+  }
+
+  // Sanitize the data before saving to MongoDB
+  const sanitizedData = {
+    ...req.body,
+    sections: req.body.sections.map((section: any) => ({
+      ...section,
+      items: section.items.map((item: any) => ({
+        ...item,
+        // Ensure photos is always a proper array of strings
+        photos: Array.isArray(item.photos) ? 
+          item.photos.filter((p: any) => typeof p === 'string') : 
+          []
+      }))
+    }))
+  };
+
+  console.log('Creating inspection document in MongoDB');
+  const doc = await Inspection.create(sanitizedData);
+  console.log('Inspection created with ID:', doc._id);
+  res.status(201).json(doc);
+} catch (err) {
+  const error = err as Error;
+  console.error('Error creating inspection:', error);
+  res.status(500).json({ error: 'Failed to create inspection', message: error.message });
+}
 });
 
 
