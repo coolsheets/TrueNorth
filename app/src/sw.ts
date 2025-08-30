@@ -1,4 +1,6 @@
 // src/sw.ts - Custom service worker
+/// <reference path="./virtual-pwa.d.ts" />
+/// <reference path="./workbox.d.ts" />
 
 // This service worker can be customized!
 // See https://developers.google.com/web/tools/workbox/modules
@@ -13,6 +15,7 @@ import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 
+// TypeScript definition - service worker scope
 declare const self: ServiceWorkerGlobalScope;
 
 // Claim clients so this SW controls all pages immediately
@@ -105,13 +108,17 @@ registerRoute(
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
+// Listen for messages from the client and respond accordingly
+// @ts-ignore - Types for service worker are provided by our declaration files
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    // @ts-ignore - Types for service worker are provided by our declaration files
     self.skipWaiting();
   }
 });
 
 // Listen for network failures and update our offline detection
+// @ts-ignore - Types for service worker are provided by our declaration files
 self.addEventListener('fetch', (event) => {
   // Only handle API requests here (others already handled by registerRoute)
   if (!event.request.url.includes('/api/')) {
@@ -122,6 +129,7 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request).catch((error) => {
       console.error('Fetch failed, likely offline:', error);
       // Send a message to the client to update offline status
+      // @ts-ignore - Types for service worker are provided by our declaration files
       self.clients.matchAll().then(clients => {
         clients.forEach(client => {
           client.postMessage({

@@ -1,4 +1,5 @@
 // src/registerSW.ts
+/// <reference path="./virtual-pwa.d.ts" />
 import { registerSW } from 'virtual:pwa-register';
 
 // Register the service worker
