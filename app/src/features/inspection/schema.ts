@@ -13,6 +13,16 @@ export const sections: Section[] = [
     { id: 'glass', label: 'Windshield chips/cracks' },
     { id: 'lights', label: 'All exterior lights work' },
   ]},
+  { name: 'Tires & Wheels', slug: 'tires', items: [
+    { id: 'info-label', label: 'Tire & Loading Information Label (B-pillar)' },
+    { id: 'tires-brand', label: 'Tire brand, model & type' },
+    { id: 'tires-size', label: 'Tire size & matching set' },
+    { id: 'tires-condition', label: 'Tread depth & condition' },
+    { id: 'tires-capability', label: 'Tire capability markings (M+S, 3PMSF)' },
+    { id: 'wheels-condition', label: 'Wheel condition (dents, rust, finish)' },
+    { id: 'spare-tire', label: 'Spare tire condition & tools' },
+    { id: 'second-set', label: 'Second set of tires (if available)' }
+  ]},
   { name: 'Undercarriage & Rust (Canada)', slug: 'rust', items: [
     { id: 'frame', label: 'Frame rails/crossmembers rust' },
     { id: 'cab', label: 'Cab corners/rockers/bed supports' },

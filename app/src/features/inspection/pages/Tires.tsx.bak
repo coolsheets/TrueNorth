@@ -1,0 +1,510 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { 
+  Typography, 
+  Button, 
+  Stack, 
+  Grid as MuiGrid,
+  FormControl, 
+  FormLabel, 
+  RadioGroup, 
+  Radio, 
+  FormControlLabel, 
+  TextField,
+  CircularProgress,
+  Box,
+  Divid                    <MuiGrid container spacing={2}>
+                      <MuiGrid item xs={12} sm={6}>,
+  Alert,
+  Paper,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  IconButton
+} from "@mui/material";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningIcon from '@mui/icons-material/Warning';
+import ErrorIcon from '@mui/icons-material/Error';
+import DeleteIcon from '@mui/icons-material/Delete';
+import InfoIcon from '@mui/icons-material/Info';
+import Card from "../../../components/Card";
+import PhotoCapture from "../../../components/PhotoCapture";
+import { db, type InspectionDraft, type ItemState } from "../db";
+import { sections } from "../schema";
+
+// Extend the ItemState type to include second set details
+interface TireItemState {
+  id: string;
+  state: string;
+  notes: string;
+  photos?: string[];
+  secondSet?: {
+    brand?: string;
+    size?: string;
+    type?: string;
+    treadDepth?: string;
+    winterRating?: string;
+    storage?: string;
+  }
+}
+
+export default function Tires() {
+  const [params] = useSearchParams();
+  const nav = useNavigate();
+  const draftId = Number(params.get("draftId") || "");
+  const [draft, setDraft] = useState<InspectionDraft | null>(null);
+  const [sectionItems, setSectionItems] = useState<TireItemState[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [photoMap, setPhotoMap] = useState<Record<string, string[]>>({});
+  
+  // Find the section in our schema
+  const sectionSchema = sections.find(s => s.slug === 'tires');
+  
+  useEffect(() => {
+    async function loadDraft() {
+      if (!draftId) {
+        nav("/");
+        return;
+      }
+      
+      try {
+        const draft = await db.drafts.get(draftId);
+        if (!draft) {
+          nav("/");
+          return;
+        }
+        setDraft(draft);
+        
+        // Find the section data in the draft
+        const sectionData = draft.sections.find(s => s.slug === 'tires');
+        if (sectionData) {
+          setSectionItems(sectionData.items as TireItemState[]);
+          
+          // Initialize photo map
+          const newPhotoMap: Record<string, string[]> = {};
+          sectionData.items.forEach(item => {
+            if (item.photos && item.photos.length > 0) {
+              newPhotoMap[item.id] = item.photos;
+            } else {
+              newPhotoMap[item.id] = [];
+            }
+          });
+          setPhotoMap(newPhotoMap);
+        }
+      } catch (err) {
+        console.error("Error loading draft", err);
+      }
+    }
+    
+    loadDraft();
+  }, [draftId, nav]);
+
+  const updateItemStatus = (itemId: string, status: 'ok' | 'warn' | 'fail' | 'na') => {
+    setSectionItems(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, status } 
+          : item
+      )
+    );
+  };
+
+  const updateItemNotes = (itemId: string, notes: string) => {
+    setSectionItems(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, notes } 
+          : item
+      )
+    );
+  };
+
+  const handleAddPhoto = (itemId: string, file: File) => {
+    // Convert the image to a data URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      
+      // Add the photo to the photo map
+      setPhotoMap(prevMap => ({
+        ...prevMap,
+        [itemId]: [...(prevMap[itemId] || []), dataUrl]
+      }));
+      
+      // Also update the section items
+      setSectionItems(items => 
+        items.map(item => 
+          item.id === itemId 
+            ? { ...item, photos: [...(item.photos || []), dataUrl] } 
+            : item
+        )
+      );
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = (itemId: string, index: number) => {
+    // Remove from photo map
+    setPhotoMap(prevMap => {
+      const newPhotos = [...(prevMap[itemId] || [])];
+      newPhotos.splice(index, 1);
+      return {
+        ...prevMap,
+        [itemId]: newPhotos
+      };
+    });
+    
+    // Also update section items
+    setSectionItems(items => 
+      items.map(item => {
+        if (item.id !== itemId) return item;
+        const newPhotos = [...(item.photos || [])];
+        newPhotos.splice(index, 1);
+        return { ...item, photos: newPhotos };
+      })
+    );
+  };
+
+  const handleSave = async () => {
+    if (!draft || !draftId) return;
+    
+    setSaving(true);
+    try {
+      // Check if section already exists
+      const existingSection = draft.sections.find(s => s.slug === 'tires');
+      
+      // Update the draft
+      const updatedDraft = {
+        ...draft,
+        sections: existingSection
+          ? draft.sections.map(section => 
+              section.slug === 'tires'
+                ? { ...section, items: sectionItems }
+                : section
+            )
+          : [...draft.sections, { slug: 'tires', items: sectionItems }],
+        updatedAt: Date.now()
+      };
+      
+      await db.drafts.update(draftId, updatedDraft);
+      // Navigate to next section
+      nav(`/rust?draftId=${draftId}`);
+    } catch (err) {
+      console.error("Error saving section", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'ok': return <CheckCircleIcon color="success" />;
+      case 'warn': return <WarningIcon color="warning" />;
+      case 'fail': return <ErrorIcon color="error" />;
+      case 'na': return <InfoIcon color="disabled" />;
+      default: return null;
+    }
+  };
+
+  return (
+    <Stack spacing={3}>
+      <Card>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Tires & Wheels Inspection
+        </Typography>
+        <Typography color="text.secondary" paragraph>
+          Check all tires including the spare. Document sizes, conditions, and take photos of the Tire and Loading Information Label on the B-pillar.
+        </Typography>
+        
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Provincial Winter Tire Requirements:
+          </Typography>
+          <Typography variant="body2" paragraph>
+            • British Columbia: Requires M+S (Mud+Snow) or 3PMSF (Three-Peak Mountain Snowflake) tires on designated highways from Oct 1 to Apr 30.
+          </Typography>
+          <Typography variant="body2" paragraph>
+            • Quebec: Requires dedicated winter tires with 3PMSF symbol on all vehicles from Dec 1 to Mar 15.
+          </Typography>
+          <Typography variant="body2">
+            • Other provinces: May have their own regulations or recommendations. Check with local transportation authority.
+          </Typography>
+        </Alert>
+        
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            Be sure to check and document:
+            <List dense>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Tire brand, model, and type (all-season, winter, etc.)" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Size (e.g., 245/70R17) - verify all match" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Tread depth and wear pattern" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Winter capability markings (M+S, 3PMSF) - required in BC, Quebec, etc." />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Tire and Loading Information Label (required photo)" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Condition of the spare tire and associated tools" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon style={{ minWidth: '30px' }}><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Second set of tires if available (winter/summer set)" />
+              </ListItem>
+            </List>
+          </Typography>
+        </Alert>
+        
+        {!draft ? (
+          <Typography>Loading inspection...</Typography>
+        ) : (
+          <>
+            {sectionSchema?.items.map((schemaItem) => {
+              const itemState = sectionItems.find(i => i.id === schemaItem.id);
+              if (!itemState) return null;
+              
+              return (
+                <Card key={schemaItem.id} sx={{ mt: 2, mb: 2 }}>
+                  <Typography variant="h6" gutterBottom>
+                    {schemaItem.label}
+                  </Typography>
+                  
+                  <FormControl component="fieldset" sx={{ mb: 2 }}>
+                    <FormLabel component="legend">Status</FormLabel>
+                    <RadioGroup
+                      row
+                      value={itemState.status}
+                      onChange={(e) => updateItemStatus(schemaItem.id, e.target.value as any)}
+                    >
+                      <FormControlLabel value="ok" control={<Radio />} label="Good" />
+                      <FormControlLabel value="warn" control={<Radio />} label="Caution" />
+                      <FormControlLabel value="fail" control={<Radio />} label="Problem" />
+                      <FormControlLabel value="na" control={<Radio />} label="N/A" />
+                    </RadioGroup>
+                  </FormControl>
+                  
+                {schemaItem.id === 'second-set' && (
+                  <Box sx={{ mb: 2, mt: 1, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px dashed', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Second Set Details (if available)
+                    </Typography>
+                    <MuiGrid container spacing={2}>
+                      <MuiGrid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Tire Brand & Model"
+                          placeholder="e.g., Bridgestone Blizzak DM-V2"
+                          value={(itemState.secondSet?.brand) || ""}
+                          onChange={(e) => {
+                            setSectionItems(items => 
+                              items.map(item => 
+                                item.id === schemaItem.id 
+                                  ? { 
+                                      ...item, 
+                                      secondSet: { 
+                                        ...(item.secondSet || {}), 
+                                        brand: e.target.value 
+                                      } 
+                                    } 
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </MuiGrid>
+                      <MuiGrid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Size"
+                          placeholder="e.g., 245/70R17"
+                          value={(itemState.secondSet?.size) || ""}
+                          onChange={(e) => {
+                            setSectionItems(items => 
+                              items.map(item => 
+                                item.id === schemaItem.id 
+                                  ? { 
+                                      ...item, 
+                                      secondSet: { 
+                                        ...(item.secondSet || {}), 
+                                        size: e.target.value 
+                                      } 
+                                    } 
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </MuiGrid>
+                      <MuiGrid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Type"
+                          placeholder="e.g., Winter, All-Season, Summer"
+                          value={(itemState.secondSet?.type) || ""}
+                          onChange={(e) => {
+                            setSectionItems(items => 
+                              items.map(item => 
+                                item.id === schemaItem.id 
+                                  ? { 
+                                      ...item, 
+                                      secondSet: { 
+                                        ...(item.secondSet || {}), 
+                                        type: e.target.value 
+                                      } 
+                                    } 
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </MuiGrid>
+                      <MuiGrid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Tread Depth"
+                          placeholder="e.g., 8mm"
+                          value={(itemState.secondSet?.treadDepth) || ""}
+                          onChange={(e) => {
+                            setSectionItems(items => 
+                              items.map(item => 
+                                item.id === schemaItem.id 
+                                  ? { 
+                                      ...item, 
+                                      secondSet: { 
+                                        ...(item.secondSet || {}), 
+                                        treadDepth: e.target.value 
+                                      } 
+                                    } 
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </MuiGrid>
+                      <MuiGrid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Winter Rating"
+                          placeholder="e.g., M+S, 3PMSF, None"
+                          value={(itemState.secondSet?.winterRating) || ""}
+                          onChange={(e) => {
+                            setSectionItems(items => 
+                              items.map(item => 
+                                item.id === schemaItem.id 
+                                  ? { 
+                                      ...item, 
+                                      secondSet: { 
+                                        ...(item.secondSet || {}), 
+                                        winterRating: e.target.value 
+                                      } 
+                                    } 
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </MuiGrid>
+                      <MuiGrid item xs={12} sm={6}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Storage Location"
+                          placeholder="e.g., Garage, Storage facility"
+                          value={(itemState.secondSet?.storage) || ""}
+                          onChange={(e) => {
+                            setSectionItems(items => 
+                              items.map(item => 
+                                item.id === schemaItem.id 
+                                  ? { 
+                                      ...item, 
+                                      secondSet: { 
+                                        ...(item.secondSet || {}), 
+                                        storage: e.target.value 
+                                      } 
+                                    } 
+                                  : item
+                              )
+                            );
+                          }}
+                        />
+                      </MuiGrid>
+                    </MuiGrid>
+                  </Box>
+                )}
+                  
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Photos {schemaItem.id === 'info-label' && '(Tire & Loading Information Label required)'}
+                    </Typography>
+                    
+                    <PhotoCapture onSelect={(file) => handleAddPhoto(schemaItem.id, file)} />
+                    
+                    {/* Display photos */}
+                    {photoMap[schemaItem.id]?.length > 0 && (
+                      <MuiGrid container spacing={2} sx={{ mt: 1 }}>
+                        {photoMap[schemaItem.id].map((photo, index) => (
+                          <MuiGrid item xs={6} sm={4} md={3} key={index}>
+                            <Paper elevation={2} sx={{ position: 'relative' }}>
+                              <Box 
+                                component="img" 
+                                src={photo} 
+                                alt={`${schemaItem.label} photo ${index + 1}`} 
+                                sx={{ width: '100%', height: 'auto', borderRadius: 1 }} 
+                              />
+                              <IconButton 
+                                size="small" 
+                                onClick={() => handleRemovePhoto(schemaItem.id, index)}
+                                sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.7)' }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Paper>
+                          </MuiGrid>
+                        ))}
+                      </MuiGrid>
+                    )}
+                  </Box>
+                </Card>
+              );
+            })}
+            
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => nav(`/exterior?draftId=${draftId}`)}
+              >
+                Back to Exterior
+              </Button>
+              <Button 
+                variant="contained" 
+                onClick={handleSave}
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}
+              >
+                {saving ? "Saving..." : "Save & Continue"}
+              </Button>
+            </Box>
+          </>
+        )}
+      </Card>
+    </Stack>
+  );
+}

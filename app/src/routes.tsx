@@ -2,6 +2,7 @@ import { useRoutes } from 'react-router-dom';
 import Start from './features/inspection/pages/Start';
 import Vehicle from './features/inspection/pages/Vehicle';
 import Exterior from './features/inspection/pages/Exterior';
+import Tires from './features/inspection/pages/Tires';
 import Rust from './features/inspection/pages/Rust';
 import EngineBay from './features/inspection/pages/EngineBay';
 import Interior from './features/inspection/pages/Interior';
@@ -16,6 +17,7 @@ export default function Routes(){
   { path: '/start', element: <Start /> },
   { path: '/vehicle', element: <Vehicle /> },
   { path: '/exterior', element: <Exterior /> },
+  { path: '/tires', element: <Tires /> },
   { path: '/rust', element: <Rust /> },
   { path: '/engine', element: <EngineBay /> },
   { path: '/interior', element: <Interior /> },

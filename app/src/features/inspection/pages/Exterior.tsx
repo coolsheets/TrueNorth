@@ -94,7 +94,7 @@ export default function Exterior() {
       
       await db.drafts.update(draftId, updatedDraft);
       // Navigate to next section
-      nav(`/rust?draftId=${draftId}`);
+      nav(`/tires?draftId=${draftId}`);
     } catch (err) {
       console.error("Error saving section", err);
     } finally {
