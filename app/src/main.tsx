@@ -6,6 +6,8 @@ import App from './App';
 import theme from './styles/theme';
 import './styles/index.css';
 import { setupSyncListeners } from './utils/sync';
+import { initializePrecaching } from './utils/precache';
+import './registerSW';
 
 // Opt into future behavior for React Router
 const routerOptions = {
@@ -29,3 +31,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 // Initialize background sync
 setupSyncListeners();
+
+// Initialize precaching for offline use
+initializePrecaching();

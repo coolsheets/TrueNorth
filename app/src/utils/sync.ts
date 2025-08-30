@@ -1,13 +1,14 @@
 import { db } from '../features/inspection/db';
+import { isBrowserOnline, registerConnectionFailure, setupOfflineListeners } from './offlineDetection';
 
 /**
  * Sync all unsynced inspection drafts to the server
  * @returns {Promise<{ success: number, failed: number }>} Count of successful and failed syncs
  */
 export async function syncInspections(): Promise<{ success: number; failed: number }> {
-  // Skip if offline
-  if (!navigator.onLine) {
-    console.log('Offline - skipping sync');
+  // Skip if offline using enhanced detection
+  if (!isBrowserOnline()) {
+    console.log('Offline detected - skipping sync');
     return { success: 0, failed: 0 };
   }
 
@@ -80,6 +81,9 @@ export async function syncInspections(): Promise<{ success: number; failed: numb
  * Setup periodic sync and online/offline event listeners
  */
 export function setupSyncListeners(): void {
+  // Initialize offline detection listeners
+  setupOfflineListeners();
+  
   // Sync when coming online
   window.addEventListener('online', () => {
     console.log('Back online - initiating sync');
@@ -88,14 +92,14 @@ export function setupSyncListeners(): void {
   
   // Set up periodic sync (every 5 minutes)
   setInterval(() => {
-    if (navigator.onLine) {
+    if (isBrowserOnline()) {
       syncInspections();
     }
   }, 5 * 60 * 1000);
   
   // Initial sync on startup (with small delay)
   setTimeout(() => {
-    if (navigator.onLine) {
+    if (isBrowserOnline()) {
       syncInspections();
     }
   }, 5000);

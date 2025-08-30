@@ -14,9 +14,9 @@
 
     <!-- Icons (ensure these exist in app/public/icons/) -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="/icons/icon-192-new.svg" sizes="192x192" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/icon-192-new.svg" sizes="192x192" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/icon-512-new.svg" sizes="512x512" type="image/svg+xml" />
+    <link rel="icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192" type="image/png" />
+    <link rel="apple-touch-icon" href="/icons/icon-512.png" sizes="512x512" type="image/png" />
     
     <!-- iOS PWA specific tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -28,7 +28,29 @@
   </head>
   <body>
     <noscript>This app requires JavaScript enabled.</noscript>
+    <div id="offline-message" style="display: none; background-color: #f59e0b; color: black; text-align: center; padding: 1rem;">
+      You are currently offline. The app will function with limited capabilities.
+    </div>
     <div id="root"></div>
+    <script>
+      // Fallback offline detection if the app JS fails to load
+      if (!navigator.onLine) {
+        document.getElementById('offline-message').style.display = 'block';
+      }
+      
+      // Register service worker as early as possible
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(function(error) {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
