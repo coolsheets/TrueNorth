@@ -4,7 +4,26 @@ export type ItemState = { id: string; status: 'ok'|'warn'|'fail'|'na'; notes?: s
 export type SectionState = { slug: string; items: ItemState[] };
 export type InspectionDraft = {
   id?: number;
-  vehicle: { vin?: string; year?: number; make?: string; model?: string; odo?: number; province?: string };
+  vehicle: { 
+    vin?: string; 
+    year?: number; 
+    make?: string; 
+    model?: string; 
+    odo?: number; 
+    province?: string;
+    // Additional vehicle details
+    manufacturer?: string;
+    displacement?: string;
+    fuelType?: string;
+    cylinderCount?: string;
+    horsePower?: string;
+    cabType?: string;
+    gvwr?: string;
+    plantInfo?: string;
+    airbagLocations?: string;
+    brakeSystemType?: string;
+    tpmsType?: string;
+  };
   sections: SectionState[];
   createdAt: number;
   updatedAt: number;

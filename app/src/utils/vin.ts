@@ -14,6 +14,18 @@ interface VinDecodingResponse {
     transmission?: string;
     bodyType?: string;
     drivetrain?: string;
+    // Additional vehicle details
+    manufacturer?: string;
+    displacement?: string;
+    fuelType?: string;
+    cylinderCount?: string;
+    horsePower?: string;
+    cabType?: string;
+    gvwr?: string;
+    plantInfo?: string;
+    airbagLocations?: string;
+    brakeSystemType?: string;
+    tpmsType?: string;
   };
 }
 
@@ -75,7 +87,22 @@ export async function decodeVin(vin: string): Promise<VinDecodingResponse> {
           engine,
           transmission,
           bodyType,
-          drivetrain
+          drivetrain,
+          // Additional data fields
+          manufacturer: getResultValue('Manufacturer Name'),
+          displacement: getResultValue('Displacement (L)'),
+          fuelType: getResultValue('Fuel Type - Primary'),
+          cylinderCount: getResultValue('Engine Number of Cylinders'),
+          horsePower: getResultValue('Engine Brake (hp) From'),
+          cabType: getResultValue('Cab Type'),
+          gvwr: getResultValue('Gross Vehicle Weight Rating From'),
+          plantInfo: `${getResultValue('Plant City')}, ${getResultValue('Plant State')}, ${getResultValue('Plant Country')}`.replace(/, ,/g, ''),
+          airbagLocations: [
+            getResultValue('Front Air Bag Locations'), 
+            getResultValue('Side Air Bag Locations')
+          ].filter(Boolean).join(', '),
+          brakeSystemType: getResultValue('Brake System Type'),
+          tpmsType: getResultValue('Tire Pressure Monitoring System (TPMS) Type'),
         }
       };
     } else {

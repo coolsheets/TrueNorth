@@ -25,6 +25,19 @@ type VehicleForm = {
   model: string;
   odo?: number;
   province: string;
+  // Additional vehicle details
+  manufacturer?: string;
+  displacement?: string;
+  fuelType?: string;
+  cylinderCount?: string;
+  horsePower?: string;
+  cabType?: string;
+  gvwr?: string;
+  plantInfo?: string;
+  airbagLocations?: string;
+  brakeSystemType?: string;
+  tpmsType?: string;
+  drivetrain?: string;
 };
 
 export default function Vehicle() {
@@ -108,9 +121,22 @@ export default function Vehicle() {
           ...prev,
           year: result.data.year ? parseInt(result.data.year) : undefined,
           make: result.data.make || prev.make,
-          model: result.data.model || prev.model
+          model: result.data.model || prev.model,
+          // Add the additional vehicle details
+          manufacturer: result.data.manufacturer,
+          displacement: result.data.displacement,
+          fuelType: result.data.fuelType,
+          cylinderCount: result.data.cylinderCount,
+          horsePower: result.data.horsePower,
+          cabType: result.data.cabType,
+          gvwr: result.data.gvwr,
+          plantInfo: result.data.plantInfo,
+          airbagLocations: result.data.airbagLocations,
+          brakeSystemType: result.data.brakeSystemType,
+          tpmsType: result.data.tpmsType,
+          drivetrain: result.data.drivetrain
         }));
-        setNotification("VIN decoded successfully!");
+        setNotification("VIN decoded successfully! Additional vehicle details loaded.");
       } else {
         setAlert(result.error || "Failed to decode VIN. Please enter vehicle details manually.");
       }
@@ -138,7 +164,19 @@ export default function Vehicle() {
           make: form.make,
           model: form.model,
           odo: form.odo,
-          province: form.province
+          province: form.province,
+          // Additional vehicle details
+          manufacturer: form.manufacturer,
+          displacement: form.displacement,
+          fuelType: form.fuelType,
+          cylinderCount: form.cylinderCount,
+          horsePower: form.horsePower,
+          cabType: form.cabType,
+          gvwr: form.gvwr,
+          plantInfo: form.plantInfo,
+          airbagLocations: form.airbagLocations,
+          brakeSystemType: form.brakeSystemType,
+          tpmsType: form.tpmsType
         },
         updatedAt: Date.now()
       };
@@ -207,6 +245,61 @@ export default function Vehicle() {
                   Enter a valid 17-character VIN and click the search icon to auto-populate vehicle information
                 </Typography>
               </Grid>
+              
+              {/* Display additional vehicle information when available */}
+              {(form.manufacturer || form.displacement || form.cylinderCount || form.horsePower) && (
+                <Grid item xs={12}>
+                  <Box sx={{ mt: 2, mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Additional Vehicle Information from VIN Lookup:
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {form.manufacturer && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">Manufacturer</Typography>
+                          <Typography variant="body2">{form.manufacturer}</Typography>
+                        </Grid>
+                      )}
+                      {form.displacement && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">Engine</Typography>
+                          <Typography variant="body2">{form.displacement}L {form.cylinderCount ? `(${form.cylinderCount} cyl)` : ''}</Typography>
+                        </Grid>
+                      )}
+                      {form.horsePower && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">Power</Typography>
+                          <Typography variant="body2">{form.horsePower} HP</Typography>
+                        </Grid>
+                      )}
+                      {form.fuelType && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">Fuel Type</Typography>
+                          <Typography variant="body2">{form.fuelType}</Typography>
+                        </Grid>
+                      )}
+                      {form.cabType && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">Cab Type</Typography>
+                          <Typography variant="body2">{form.cabType}</Typography>
+                        </Grid>
+                      )}
+                      {form.gvwr && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">GVWR</Typography>
+                          <Typography variant="body2">{form.gvwr}</Typography>
+                        </Grid>
+                      )}
+                      {form.drivetrain && (
+                        <Grid item xs={6} md={3}>
+                          <Typography variant="caption" color="text.secondary" display="block">Drivetrain</Typography>
+                          <Typography variant="body2">{form.drivetrain}</Typography>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Box>
+                </Grid>
+              )}
 
               <Grid item xs={12} md={6}>
                 <TextField
