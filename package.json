@@ -5,11 +5,36 @@
 		"app",
 		"server"
 	],
+	"husky": {
+		"hooks": {
+			"pre-commit": "npm run validate && lint-staged"
+		}
+	},
+	"lint-staged": {
+		"package.json": [
+			"npm run validate:package"
+		],
+		"app/src/features/inspection/pages/Vehicle.tsx": [
+			"npm run validate:vin-search"
+		],
+		"app/src/utils/vin.ts": [
+			"npm run validate:vin-search"
+		],
+		"*.{ts,tsx,js}": [
+			"eslint --fix"
+		]
+	},
 	"scripts": {
 		"bootstrap": "npm --prefix app i && npm --prefix server i",
 		"dev": "concurrently \"npm:dev:server\" \"npm:dev:app\"",
 		"dev:app": "npm --prefix app run dev",
 		"dev:server": "npm --prefix server run dev",
+		"// IMPORTANT: The next two scripts are critical for mobile/PWA testing": "",
+		"dev:mobile": "concurrently \"npm:dev:server\" \"npm:dev:app:host\"",
+		"dev:app:host": "npm --prefix app run dev -- --host",
+		"validate:package": "node ./scripts/validate-package.js",
+		"validate:vin-search": "node ./scripts/validate-vin-search.js",
+		"validate": "npm run validate:package && npm run validate:vin-search",
 		"build": "npm --prefix app run build && npm --prefix server run build",
 		"preview": "npm --prefix app run preview",
 		"lint": "eslint \"{app,server}/**/*.{ts,tsx,js}\"",
@@ -25,6 +50,8 @@
 		"eslint": "^9.5.0",
 		"eslint-plugin-react": "^7.37.5",
 		"eslint-plugin-react-hooks": "^5.2.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.1.5",
 		"playwright": "^1.47.0",
 		"postcss": "^8.5.6",
 		"prettier": "^3.3.3",
