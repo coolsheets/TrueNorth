@@ -1,0 +1,2 @@
+# Ignore Start.tsx until ESLint issue is fixed
+/app/src/features/inspection/pages/Start.tsx

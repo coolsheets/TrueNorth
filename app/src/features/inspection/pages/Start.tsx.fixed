@@ -97,7 +97,7 @@ export default function Start() {
         {drafts.length === 0 ? (
           <Typography color="text.secondary">No drafts yet. Start a new inspection above.</Typography>
         ) : (
-          <List sx={{ width: "100%", bgcolor: "background.paper" }} disablePadding>
+          <List sx={{ width: '100%', bgcolor: 'background.paper' }} disablePadding>
             {drafts.map((d) => (
               <Box key={d.id}>
                 <ListItem
@@ -125,7 +125,7 @@ export default function Start() {
       </Card>
 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-        Tip: After creating a draft you will be routed to <Box component="code" sx={{ px: 0.5 }}>/vehicle</Box> to enter VIN, year, etc., then continue through the sections.
+        Tip: After creating a draft you'll be routed to <Box component="code" sx={{ px: 0.5 }}>/vehicle</Box> to enter VIN, year, etc., then continue through the sections.
       </Typography>
     </Stack>
   );

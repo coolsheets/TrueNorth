@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import Card from "../../../components/Card";
 import { db, type InspectionDraft } from "../db";
-import { createPdf } from "../../../utils/pdf";
+import { buildPdf } from "../../../utils/pdf";
 
 export default function Export() {
   const [params] = useSearchParams();
@@ -89,8 +89,9 @@ export default function Export() {
       }
       
       // Generate and download PDF
-      await createPdf({
-        draft,
+      const pdfBlob = await buildPdf({
+        vehicle: draft.vehicle,
+        sections: draft.sections,
         summary,
         options: {
           includePhotos,
@@ -100,6 +101,26 @@ export default function Export() {
           includeSummary: !!summary
         }
       });
+      
+      // Create a download link and trigger download
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      
+      // Create a filename based on vehicle info
+      const vehicleInfo = [
+        draft.vehicle.year,
+        draft.vehicle.make,
+        draft.vehicle.model
+      ].filter(Boolean).join('-') || 'vehicle-inspection';
+      
+      link.href = url;
+      link.download = `${vehicleInfo}-inspection-report.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(link);
       
       // Save the inspection to the server if it's connected
       try {
@@ -117,9 +138,11 @@ export default function Export() {
         
         if (response.ok) {
           console.log("Inspection saved to server");
-          // Mark as synced in local database
+          // Mark as completed and synced in local database
           await db.drafts.update(draftId, {
             ...draft,
+            completed: true,
+            completedAt: new Date().toISOString(),
             synced: true,
             syncedAt: new Date().toISOString()
           });
@@ -177,18 +200,18 @@ export default function Export() {
               <Typography variant="h6" gutterBottom>
                 Vehicle Information
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                <Box>
                   <Typography><strong>Make:</strong> {draft.vehicle.make || '—'}</Typography>
                   <Typography><strong>Model:</strong> {draft.vehicle.model || '—'}</Typography>
                   <Typography><strong>Year:</strong> {draft.vehicle.year || '—'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
+                </Box>
+                <Box>
                   <Typography><strong>VIN:</strong> {draft.vehicle.vin || '—'}</Typography>
                   <Typography><strong>Odometer:</strong> {draft.vehicle.odo ? `${draft.vehicle.odo} km` : '—'}</Typography>
                   <Typography><strong>Province:</strong> {draft.vehicle.province || '—'}</Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Card>
             
             <Typography variant="h6" gutterBottom>

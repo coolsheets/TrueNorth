@@ -39,7 +39,7 @@ export class PpiDB extends Dexie {
 
   // Add a method to get all inspections that have not been synced
   async getUnsyncedInspections(): Promise<InspectionDraft[]> {
-    return this.drafts.where('synced').equals(false).toArray();
+    return this.drafts.filter(draft => draft.synced === false).toArray();
   }
 
   // Mark an inspection as synced

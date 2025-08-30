@@ -8,15 +8,10 @@ import {
   Grid,
   TextField,
   Alert,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Snackbar
+  CircularProgress
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import Card from "../../../components/Card";
 import { db, type InspectionDraft } from "../db";
-import { decodeVin, validateVin } from "../../../utils/vin";
 
 type VehicleForm = {
   vin: string;
@@ -41,134 +36,92 @@ export default function Vehicle() {
     province: ""
   });
   const [saving, setSaving] = useState(false);
-  const [lookingUpVin, setLookingUpVin] = useState(false);
-  const [alert, setAlert] = useState<string | null>(null);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // Load draft
   useEffect(() => {
-    async function loadDraft() {
-      if (!draftId) {
-        nav("/");
-        return;
-      }
-      
-      try {
-        const draft = await db.drafts.get(draftId);
-        if (!draft) {
-          nav("/");
-          return;
-        }
-        setDraft(draft);
-        setForm({
-          vin: draft.vehicle.vin || "",
-          year: draft.vehicle.year,
-          make: draft.vehicle.make || "",
-          model: draft.vehicle.model || "",
-          odo: draft.vehicle.odo,
-          province: draft.vehicle.province || ""
-        });
-      } catch (err) {
-        console.error("Error loading draft", err);
-        setAlert("Error loading draft");
-      }
+    let mounted = true;
+    (async () => {
+      if (!draftId) return setError("Missing draftId");
+      const d = await db.drafts.get(draftId);
+      if (!mounted) return;
+      if (!d) return setError("Draft not found");
+      setDraft(d);
+      setForm({
+        vin: d.vehicle?.vin || "",
+        year: d.vehicle?.year,
+        make: d.vehicle?.make || "",
+        model: d.vehicle?.model || "",
+        odo: d.vehicle?.odo,
+        province: d.vehicle?.province || ""
+      });
+    })();
+    return () => { mounted = false; };
+  }, [draftId]);
+
+  async function saveAndNext() {
+    setError(null);
+
+    // Minimal validation
+    if (!form.vin.trim()) return setError("VIN is required.");
+    if (form.year && (form.year < 1970 || form.year > new Date().getFullYear() + 1)) {
+      return setError("Enter a valid model year.");
     }
-    
-    loadDraft();
-  }, [draftId, nav]);
+    if (form.odo && form.odo < 0) return setError("Odometer must be ≥ 0.");
 
-  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value, type } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: type === "number" ? (value ? Number(value) : undefined) : value
-    }));
-  }
-
-  // Function to handle VIN lookup
-  async function handleVinLookup() {
-    if (!form.vin || form.vin.length !== 17) {
-      setAlert("Please enter a valid 17-character VIN");
-      return;
-    }
-
-    if (!validateVin(form.vin)) {
-      setAlert("Invalid VIN format. VINs contain only alphanumeric characters (excluding I, O, Q)");
-      return;
-    }
-
-    setLookingUpVin(true);
-    setAlert(null);
-
-    try {
-      const result = await decodeVin(form.vin);
-      
-      if (result.success && result.data) {
-        // Update form with decoded vehicle information
-        setForm(prev => ({
-          ...prev,
-          year: result.data.year ? parseInt(result.data.year) : undefined,
-          make: result.data.make || prev.make,
-          model: result.data.model || prev.model
-        }));
-        setNotification("VIN decoded successfully!");
-      } else {
-        setAlert(result.error || "Failed to decode VIN. Please enter vehicle details manually.");
-      }
-    } catch (error) {
-      console.error("Error looking up VIN:", error);
-      setAlert("Error looking up VIN. Please enter vehicle details manually.");
-    } finally {
-      setLookingUpVin(false);
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    
-    if (!draft || !draftId) return;
-    
     setSaving(true);
     try {
-      // Update the draft with the form data
-      const updated = {
-        ...draft,
+      await db.drafts.update(draftId, {
         vehicle: {
-          vin: form.vin,
-          year: form.year,
-          make: form.make,
-          model: form.model,
-          odo: form.odo,
-          province: form.province
+          vin: form.vin.trim(),
+          year: form.year ? Number(form.year) : undefined,
+          make: form.make.trim(),
+          model: form.model.trim(),
+          odo: form.odo ? Number(form.odo) : undefined,
+          province: form.province.trim()
         },
         updatedAt: Date.now()
-      };
-      
-      await db.drafts.update(draftId, updated);
-      nav("/exterior?draftId=" + draftId);
-    } catch (err) {
-      console.error("Error saving draft", err);
-      setAlert("Error saving draft");
+      });
+
+      // Go to the first inspection section (adjust route if needed)
+      nav(`/exterior?draftId=${draftId}`);
     } finally {
       setSaving(false);
     }
   }
 
+  function onChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setForm((f) => ({
+      ...f,
+      [name]:
+        name === "year" || name === "odo"
+          ? value === "" ? undefined : Number(value)
+          : value
+    }));
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void saveAndNext();
+  };
+
   return (
     <Stack spacing={3}>
       <Card>
         <Typography variant="h4" component="h1" gutterBottom>
-          Vehicle Details
+          Vehicle Basics
         </Typography>
-        <Typography color="text.secondary" paragraph>
-          Enter basic information about the vehicle you're inspecting.
+        <Typography color="text.secondary" paragraph sx={{ mb: 3 }}>
+          Enter core details to anchor your inspection and final report.
         </Typography>
-        
-        {alert && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {alert}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
           </Alert>
         )}
-        
+
         {!draft ? (
           <Typography color="text.secondary">
             Loading draft…
@@ -188,24 +141,7 @@ export default function Vehicle() {
                   required
                   margin="normal"
                   size="small"
-                  InputProps={{
-                    endAdornment: (
-                      <Tooltip title="Lookup vehicle info from VIN">
-                        <IconButton 
-                          onClick={handleVinLookup} 
-                          disabled={lookingUpVin || !form.vin || form.vin.length !== 17}
-                          size="small"
-                          edge="end"
-                        >
-                          {lookingUpVin ? <CircularProgress size={20} /> : <SearchIcon />}
-                        </IconButton>
-                      </Tooltip>
-                    )
-                  }}
                 />
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                  Enter a valid 17-character VIN and click the search icon to auto-populate vehicle information
-                </Typography>
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -262,10 +198,10 @@ export default function Vehicle() {
                   type="number"
                   value={form.odo ?? ""}
                   onChange={onChange}
-                  placeholder="125000"
+                  placeholder="131376"
                   variant="outlined"
                   fullWidth
-                  inputProps={{ min: 0 }}
+                  inputProps={{ min: 0, step: 1 }}
                   margin="normal"
                   size="small"
                 />
@@ -277,7 +213,7 @@ export default function Vehicle() {
                   label="Province"
                   value={form.province}
                   onChange={onChange}
-                  placeholder="ON"
+                  placeholder="AB"
                   variant="outlined"
                   fullWidth
                   margin="normal"
@@ -287,7 +223,7 @@ export default function Vehicle() {
 
               <Grid item xs={12}>
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                  <Button 
+                  <Button
                     type="submit"
                     variant="contained"
                     disabled={saving}
@@ -312,15 +248,6 @@ export default function Vehicle() {
         Your entries are stored locally (offline) and synced later. VIN/year improve
         future features (CARFAX attach, value adjustments).
       </Typography>
-
-      {/* Success notification */}
-      <Snackbar
-        open={!!notification}
-        autoHideDuration={5000}
-        onClose={() => setNotification(null)}
-        message={notification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      />
     </Stack>
   );
 }
