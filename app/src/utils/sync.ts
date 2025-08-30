@@ -52,7 +52,8 @@ export async function syncInspections(): Promise<{ success: number; failed: numb
           vehicle: draft.vehicle,
           sections: cleanedSections,
           createdAt: new Date(draft.createdAt).toISOString(),
-          updatedAt: new Date(draft.updatedAt).toISOString()
+          updatedAt: new Date(draft.updatedAt).toISOString(),
+          aiSummary: draft.aiSummary || null
         }),
       });
       

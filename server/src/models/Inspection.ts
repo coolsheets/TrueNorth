@@ -19,16 +19,29 @@ items: { type: [ItemSchema], default: [] }
 const InspectionSchema = new Schema({
 userId: String,
 vehicle: {
-vin: String,
-year: Number,
-make: String,
-model: String,
-trim: String,
-odo: Number,
-province: String
+  vin: String,
+  year: Number,
+  make: String,
+  model: String,
+  trim: String,
+  odo: Number,
+  province: String,
+  // Add additional VIN-retrieved fields
+  manufacturer: String,
+  displacement: String,
+  fuelType: String,
+  cylinderCount: String,
+  horsePower: String,
+  cabType: String,
+  gvwr: String,
+  plantInfo: String,
+  airbagLocations: String,
+  brakeSystemType: String,
+  tpmsType: String
 },
 sections: [SectionSchema],
 attachments: [String],
+aiSummary: Schema.Types.Mixed, // Store AI summary data as a flexible schema
 createdAt: { type: Date, default: Date.now },
 updatedAt: { type: Date, default: Date.now }
 });

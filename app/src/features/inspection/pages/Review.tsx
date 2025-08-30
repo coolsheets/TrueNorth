@@ -94,6 +94,20 @@ export default function Review() {
       
       const data = await response.json();
       setSummary(data);
+      
+      // Save the summary to the draft
+      if (draft && draft.id) {
+        try {
+          await db.drafts.update(draft.id, {
+            ...draft,
+            aiSummary: data,
+            updatedAt: Date.now()
+          });
+          console.log('AI summary saved to draft');
+        } catch (updateError) {
+          console.error('Failed to save AI summary to draft:', updateError);
+        }
+      }
     } catch (err) {
       console.error("Error generating summary", err);
       setError("Failed to generate AI summary. Server might be unavailable.");

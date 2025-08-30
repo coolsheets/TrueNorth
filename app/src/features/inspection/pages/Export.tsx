@@ -133,7 +133,8 @@ export default function Export() {
             vehicle: draft.vehicle,
             sections: draft.sections,
             createdAt: new Date(draft.createdAt).toISOString(),
-            updatedAt: new Date(draft.updatedAt).toISOString()
+            updatedAt: new Date(draft.updatedAt).toISOString(),
+            aiSummary: draft.aiSummary || null
           }),
         });
         

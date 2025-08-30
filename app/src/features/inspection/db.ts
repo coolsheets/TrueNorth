@@ -31,6 +31,7 @@ export type InspectionDraft = {
   completedAt?: string;
   synced?: boolean;
   syncedAt?: string;
+  aiSummary?: any; // Store AI summary data
 }
 
 export class PpiDB extends Dexie {
