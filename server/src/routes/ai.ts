@@ -1,6 +1,5 @@
 const { Router } = require('express');
 const { env } = require('../env');
-import type { Request, Response } from 'express';
 
 /**
  * Express router for AI-related endpoints
@@ -8,6 +7,9 @@ import type { Request, Response } from 'express';
  */
 const router = Router();
 
+/**
+ * TypeScript interfaces for request bodies
+ */
 interface SummaryRequest {
   vehicle: any;
   sections: any[];
@@ -24,7 +26,7 @@ interface OfferLetterRequest {
  * @param {Request} req - Express request object
  * @param {Response} res - Express response object
  */
-router.post('/summarize', async (req: Request, res: Response) => {
+router.post('/summarize', async (req, res) => {
 try {
   console.log('Received AI summarize request with body:', JSON.stringify(req.body).slice(0, 200) + '...');
   
@@ -74,14 +76,14 @@ All array items must be simple strings, not objects. Format amounts like "$X,XXX
     const parsedResponse = JSON.parse(out);
     console.log('Successfully parsed response');
     
-    // Ensure all fields are in the expected format
+    // Format the response for the client
     const formattedResponse = {
-      summary: typeof parsedResponse.summary === 'string' ? parsedResponse.summary : 'No summary available',
-      redFlags: Array.isArray(parsedResponse.redFlags) ? parsedResponse.redFlags.map(item => String(item)) : [],
-      yellowFlags: Array.isArray(parsedResponse.yellowFlags) ? parsedResponse.yellowFlags.map(item => String(item)) : [],
-      greenNotes: Array.isArray(parsedResponse.greenNotes) ? parsedResponse.greenNotes.map(item => String(item)) : [],
-      estRepairTotalCAD: typeof parsedResponse.estRepairTotalCAD === 'number' ? parsedResponse.estRepairTotalCAD : 0,
-      suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? parsedResponse.suggestedAdjustments.map(item => String(item)) : []
+      summary: parsedResponse.summary || '',
+      redFlags: Array.isArray(parsedResponse.redFlags) ? parsedResponse.redFlags.map((item) => String(item)) : [],
+      yellowFlags: Array.isArray(parsedResponse.yellowFlags) ? parsedResponse.yellowFlags.map((item) => String(item)) : [],
+      greenNotes: Array.isArray(parsedResponse.greenNotes) ? parsedResponse.greenNotes.map((item) => String(item)) : [],
+      inspectionScore: parsedResponse.inspectionScore || 0,
+      suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? parsedResponse.suggestedAdjustments.map((item) => String(item)) : []
     };
     
     res.json(formattedResponse);
@@ -101,11 +103,11 @@ All array items must be simple strings, not objects. Format amounts like "$X,XXX
 });
 
 /**
- * Generate an offer letter based on inspection findings
+ * Generate an offer letter
  * @param {Request} req - Express request object
  * @param {Response} res - Express response object
  */
-router.post('/offer-letter', async (req: Request, res: Response) => {
+router.post('/offer-letter', async (req, res) => {
   try {
     const { vehicle, priceAsk, findings } = req.body;
     
