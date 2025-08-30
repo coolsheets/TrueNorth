@@ -132,7 +132,9 @@ export default function Export() {
           body: JSON.stringify({
             vehicle: draft.vehicle,
             sections: draft.sections,
-            createdAt: new Date().toISOString(),
+            createdAt: new Date(draft.createdAt).toISOString(),
+            updatedAt: new Date(draft.updatedAt).toISOString(),
+            aiSummary: draft.aiSummary || null
           }),
         });
         
@@ -146,6 +148,11 @@ export default function Export() {
             synced: true,
             syncedAt: new Date().toISOString()
           });
+          
+          const data = await response.json();
+          console.log("Server response:", data);
+        } else {
+          console.error("Failed to save inspection to server:", await response.text());
         }
       } catch (error) {
         console.error("Error saving to server", error);

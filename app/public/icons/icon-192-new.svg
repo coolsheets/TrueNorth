@@ -1,0 +1,10 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Canadian maple leaf background -->
+  <rect width="192" height="192" rx="24" fill="#0A4B91"/>
+  <path d="M56 44L76 95L36 125H76L96 175L116 125H156L116 95L136 44L96 74L56 44Z" fill="#D61F26"/>
+  
+  <!-- Text: PPI -->
+  <text x="48" y="140" font-family="Arial, sans-serif" font-size="38" font-weight="900" fill="white">
+    PPI
+  </text>
+</svg>

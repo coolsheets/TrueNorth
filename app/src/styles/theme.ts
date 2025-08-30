@@ -5,10 +5,10 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#38bdf8', // sky-400 equivalent
+      main: '#0A4B91', // Canadian blue
     },
     secondary: {
-      main: '#f59e0b', // amber-500 equivalent
+      main: '#D61F26', // Canadian red
     },
     background: {
       default: '#020617', // slate-950 equivalent

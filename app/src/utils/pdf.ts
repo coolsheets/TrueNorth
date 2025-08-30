@@ -17,7 +17,7 @@ export async function buildPdf({
 }: { 
   vehicle: any; 
   sections: any[]; 
-  summary?: string | null; 
+  summary?: any; // Changed from string | null to any to handle objects 
   options?: PdfOptions 
 }) {
   const {
@@ -49,7 +49,17 @@ export async function buildPdf({
     page.drawText('SUMMARY', { x: 48, y, size: 12, font: boldFont }); 
     y -= 16;
     
-    const summaryLines = summary.split('\n');
+    // Handle both string and object summary formats
+    let summaryText = "";
+    if (typeof summary === 'string') {
+      summaryText = summary;
+    } else if (typeof summary === 'object' && summary !== null) {
+      // If it's an object, use the summary property or stringify it
+      summaryText = summary.summary || JSON.stringify(summary);
+    }
+    
+    // Split by newlines and render
+    const summaryLines = summaryText.split('\n');
     summaryLines.slice(0, 5).forEach(line => {
       page.drawText(line.slice(0, 80), { x: 48, y, size: 9, font });
       y -= 12;
