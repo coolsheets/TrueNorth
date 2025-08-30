@@ -28,5 +28,14 @@ export default defineConfig({
       }
     })
   ],
-  server: { port: 5173 }
+  server: { 
+    port: 5174,
+    host: '0.0.0.0', // Allow external access
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
+  }
 });

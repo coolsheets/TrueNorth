@@ -233,16 +233,16 @@ export default function Review() {
                 </Typography>
                 
                 <Typography paragraph>
-                  {summary.summary}
+                  {typeof summary.summary === 'string' ? summary.summary : JSON.stringify(summary.summary)}
                 </Typography>
                 
                 {summary.redFlags && summary.redFlags.length > 0 && (
                   <>
                     <Typography variant="h6" color="error">Red Flags:</Typography>
                     <List>
-                      {summary.redFlags.map((flag: string, index: number) => (
+                      {summary.redFlags.map((flag: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={flag} />
+                          <ListItemText primary={typeof flag === 'string' ? flag : JSON.stringify(flag)} />
                         </ListItem>
                       ))}
                     </List>
@@ -253,9 +253,9 @@ export default function Review() {
                   <>
                     <Typography variant="h6" color="warning.main">Caution Items:</Typography>
                     <List>
-                      {summary.yellowFlags.map((flag: string, index: number) => (
+                      {summary.yellowFlags.map((flag: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={flag} />
+                          <ListItemText primary={typeof flag === 'string' ? flag : JSON.stringify(flag)} />
                         </ListItem>
                       ))}
                     </List>
@@ -266,18 +266,20 @@ export default function Review() {
                   <>
                     <Typography variant="h6" color="success.main">Positive Notes:</Typography>
                     <List>
-                      {summary.greenNotes.map((note: string, index: number) => (
+                      {summary.greenNotes.map((note: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={note} />
+                          <ListItemText primary={typeof note === 'string' ? note : JSON.stringify(note)} />
                         </ListItem>
                       ))}
                     </List>
                   </>
                 )}
                 
-                {summary.estRepairTotalCAD && (
+                {summary.estRepairTotalCAD !== undefined && (
                   <Typography variant="h6" sx={{ mt: 2 }}>
-                    Estimated Repair Cost: ${summary.estRepairTotalCAD} CAD
+                    Estimated Repair Cost: ${typeof summary.estRepairTotalCAD === 'number' 
+                      ? summary.estRepairTotalCAD.toLocaleString('en-CA') 
+                      : summary.estRepairTotalCAD} CAD
                   </Typography>
                 )}
                 
@@ -285,9 +287,16 @@ export default function Review() {
                   <>
                     <Typography variant="h6" sx={{ mt: 2 }}>Suggested Negotiation Points:</Typography>
                     <List>
-                      {summary.suggestedAdjustments.map((adj: string, index: number) => (
+                      {summary.suggestedAdjustments.map((adj: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={adj} />
+                          <ListItemText 
+                            primary={typeof adj === 'string' 
+                              ? adj 
+                              : adj.type 
+                                ? `${adj.type}: $${adj.amount} CAD${adj.reason ? ' - ' + adj.reason : ''}`
+                                : JSON.stringify(adj)
+                            } 
+                          />
                         </ListItem>
                       ))}
                     </List>
