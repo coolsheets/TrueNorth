@@ -1,2 +1,15 @@
 # Ignore Start.tsx until ESLint issue is fixed
 /app/src/features/inspection/pages/Start.tsx
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# TypeScript declaration files with known issues
+*.d.ts
+
+# Server JavaScript files converted from TypeScript
+server/src/**/*.js
