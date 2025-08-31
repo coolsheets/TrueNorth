@@ -85,6 +85,10 @@ export default defineConfig({
   server: { 
     port: 5174,
     host: '0.0.0.0', // Allow external access
+    https: {
+      key: './key.pem',
+      cert: './cert.pem',
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

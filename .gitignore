@@ -45,3 +45,12 @@ logs/
 .cache/
 .eslintcache
 vite.config.ts.timestamp-*
+
+# SSL Certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p12
+*.pfx
