@@ -1,3 +1,10 @@
+/* eslint-env node */
+/* global require, module */
+/**
+ * Health check endpoint
+ * @module routes/health
+ */
+
 const { Router } = require('express');
 const router = Router();
 

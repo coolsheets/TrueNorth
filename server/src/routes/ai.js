@@ -1,11 +1,12 @@
-// @ts-nocheck
+/* eslint-env node */
+/* global require, module, console */
 /**
  * AI-related endpoints for summarizing inspections and generating offer letters
  * @module routes/ai
  */
 
 const { Router } = require('express');
-const { env } = require('../env');
+const { env } = require('../env.js');
 
 /**
  * Express router for AI-related endpoints
@@ -71,14 +72,10 @@ All array items must be simple strings, not objects. Format amounts like "$X,XXX
       // Format the response for the client
       const formattedResponse = {
         summary: parsedResponse.summary || '',
-        // @ts-ignore
         redFlags: Array.isArray(parsedResponse.redFlags) ? parsedResponse.redFlags.map(item => String(item)) : [],
-        // @ts-ignore
         yellowFlags: Array.isArray(parsedResponse.yellowFlags) ? parsedResponse.yellowFlags.map(item => String(item)) : [],
-        // @ts-ignore
         greenNotes: Array.isArray(parsedResponse.greenNotes) ? parsedResponse.greenNotes.map(item => String(item)) : [],
         inspectionScore: parsedResponse.inspectionScore || 0,
-        // @ts-ignore
         suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? parsedResponse.suggestedAdjustments.map(item => String(item)) : []
       };
       

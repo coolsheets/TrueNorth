@@ -3,7 +3,7 @@ const cors = require('cors');
 const { env } = require('./env');
 const health = require('./routes/health');
 const inspections = require('./routes/inspections');
-const ai = require('./routes/ai');
+const ai = require('./routes/ai.js'); // Changed from ./routes/ai to ./routes/ai.js
 
 
 const app = express();
