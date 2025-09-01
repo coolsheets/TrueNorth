@@ -28,12 +28,12 @@ const ensureStringArray = (value) => {
 /**
  * Validates and normalizes an inspection score
  * @param {any} score - The score to validate
- * @returns {number} - A normalized score between INSPECTION_SCORE_MIN and INSPECTION_SCORE_MAX
+ * @returns {number|null} - A normalized score between INSPECTION_SCORE_MIN and INSPECTION_SCORE_MAX, or null if invalid
  */
 const validateInspectionScore = (score) => {
   // Check if the score is a number
-  if (typeof score !== 'number') {
-    return INSPECTION_SCORE_MIN; // Default to minimum score if not a number
+  if (typeof score !== 'number' || isNaN(score)) {
+    return null; // Return null to explicitly indicate invalid input
   }
   
   // Clamp the value between MIN and MAX bounds
@@ -99,6 +99,8 @@ router.post('/summarize', async (req, res) => {
         greenNotes: ensureStringArray(parsedResponse.greenNotes),
         // Validate and normalize the inspection score
         inspectionScore: validateInspectionScore(parsedResponse.inspectionScore),
+        // Add a validation flag if the score was invalid
+        validScore: validateInspectionScore(parsedResponse.inspectionScore) !== null,
         // Process suggestedAdjustments as objects
         suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? 
           parsedResponse.suggestedAdjustments.map(adj => {
