@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { AISummary } from '../../types/summary';
 
 export type ItemState = { id: string; status: 'ok'|'warn'|'fail'|'na'; notes?: string; photos?: string[] };
 export type SectionState = { slug: string; items: ItemState[] };
@@ -31,7 +32,7 @@ export type InspectionDraft = {
   completedAt?: string;
   synced?: boolean;
   syncedAt?: string;
-  aiSummary?: any; // Store AI summary data
+  aiSummary?: AISummary; // Store AI summary data with proper typing
 }
 
 export class PpiDB extends Dexie {

@@ -1,5 +1,6 @@
 import { db } from '../features/inspection/db';
 import { isBrowserOnline, registerConnectionFailure, setupOfflineListeners } from './offlineDetection';
+import { AISummary } from '../types/summary';
 
 /**
  * Sync all unsynced inspection drafts to the server

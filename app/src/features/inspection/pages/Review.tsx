@@ -16,6 +16,7 @@ import {
 import Card from "../../../components/Card";
 import { db, type InspectionDraft, type SectionState } from "../db";
 import { sections as templateSections } from "../schema";
+import { AISummary } from "../../../types/summary";
 
 // Helper function to get status color
 const getStatusColor = (status: string) => {
@@ -44,7 +45,7 @@ export default function Review() {
   const [draft, setDraft] = useState<InspectionDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [summarizing, setSummarizing] = useState(false);
-  const [summary, setSummary] = useState<any | null>(null);
+  const [summary, setSummary] = useState<AISummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

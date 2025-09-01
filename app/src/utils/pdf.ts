@@ -1,4 +1,5 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { AISummary } from '../types/summary';
 
 // Define option types
 export type PdfOptions = {
@@ -17,7 +18,7 @@ export async function buildPdf({
 }: { 
   vehicle: any; 
   sections: any[]; 
-  summary?: any; // Changed from string | null to any to handle objects 
+  summary?: AISummary | string | null; // Properly typed summary
   options?: PdfOptions 
 }) {
   const {
@@ -54,8 +55,8 @@ export async function buildPdf({
     if (typeof summary === 'string') {
       summaryText = summary;
     } else if (typeof summary === 'object' && summary !== null) {
-      // If it's an object, use the summary property or stringify it
-      summaryText = summary.summary || JSON.stringify(summary);
+      // If it's an AISummary object, use the summary property
+      summaryText = summary.summary || '';
     }
     
     // Split by newlines and render
@@ -64,6 +65,44 @@ export async function buildPdf({
       page.drawText(line.slice(0, 80), { x: 48, y, size: 9, font });
       y -= 12;
     });
+    
+    // If it's an AISummary object with flags, render those too
+    if (typeof summary === 'object' && summary !== null) {
+      const aiSummary = summary as AISummary;
+      
+      // Add red flags
+      if (aiSummary.redFlags && aiSummary.redFlags.length > 0) {
+        y -= 8;
+        page.drawText('RED FLAGS:', { x: 48, y, size: 10, font: boldFont, color: rgb(0.8, 0, 0) });
+        y -= 14;
+        
+        aiSummary.redFlags.forEach(flag => {
+          page.drawText(`- ${flag.slice(0, 75)}`, { x: 60, y, size: 9, font, color: rgb(0.8, 0, 0) });
+          y -= 12;
+        });
+      }
+      
+      // Add yellow flags
+      if (aiSummary.yellowFlags && aiSummary.yellowFlags.length > 0) {
+        y -= 8;
+        page.drawText('CAUTION ITEMS:', { x: 48, y, size: 10, font: boldFont, color: rgb(0.8, 0.4, 0) });
+        y -= 14;
+        
+        aiSummary.yellowFlags.forEach(flag => {
+          page.drawText(`- ${flag.slice(0, 75)}`, { x: 60, y, size: 9, font, color: rgb(0.8, 0.4, 0) });
+          y -= 12;
+        });
+      }
+      
+      // Add score if available
+      if (typeof aiSummary.inspectionScore === 'number') {
+        y -= 8;
+        page.drawText(`INSPECTION SCORE: ${aiSummary.inspectionScore}/100`, { 
+          x: 48, y, size: 10, font: boldFont 
+        });
+        y -= 12;
+      }
+    }
     
     y -= 16;
   }

@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import Card from "../../../components/Card";
 import { db, type InspectionDraft } from "../db";
+import { AISummary } from "../../../types/summary";
 import { buildPdf } from "../../../utils/pdf";
 
 export default function Export() {
