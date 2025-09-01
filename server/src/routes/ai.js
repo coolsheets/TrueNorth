@@ -92,15 +92,16 @@ router.post('/summarize', async (req, res) => {
       secureLog('Successfully parsed response');
       
       // Format the response for the client
+      const normalizedScore = validateInspectionScore(parsedResponse.inspectionScore);
       const formattedResponse = {
         summary: parsedResponse.summary || '',
         redFlags: ensureStringArray(parsedResponse.redFlags),
         yellowFlags: ensureStringArray(parsedResponse.yellowFlags),
         greenNotes: ensureStringArray(parsedResponse.greenNotes),
         // Validate and normalize the inspection score
-        inspectionScore: validateInspectionScore(parsedResponse.inspectionScore),
+        inspectionScore: normalizedScore,
         // Add a validation flag if the score was invalid
-        validScore: validateInspectionScore(parsedResponse.inspectionScore) !== null,
+        validScore: normalizedScore !== null,
         // Process suggestedAdjustments as objects
         suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? 
           parsedResponse.suggestedAdjustments.map(adj => {
