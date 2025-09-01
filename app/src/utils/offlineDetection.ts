@@ -5,6 +5,13 @@
  * This handles cases where navigator.onLine may not be reliable
  */
 
+// Configuration constants
+/**
+ * Time in milliseconds that a connection failure is considered relevant
+ * If a connection failure happened within this time window, we consider the device still offline
+ */
+const CONNECTION_FAILURE_TIMEOUT_MS = 30000; // 30 seconds
+
 // Use any for now to avoid type conflicts with RequestInit
 type FetchRequest = RequestInfo | URL;
 type FetchOptions = any;
@@ -41,8 +48,8 @@ export function isBrowserOnline(): boolean {
     const lastConnFailTime = localStorage.getItem('lastConnectionFailure');
     if (lastConnFailTime) {
       const failedTimeAgo = Date.now() - parseInt(lastConnFailTime, 10);
-      // If there was a failure within the last 30 seconds, assume still offline
-      if (failedTimeAgo < 30000) {
+      // If there was a failure within the timeout window, assume still offline
+      if (failedTimeAgo < CONNECTION_FAILURE_TIMEOUT_MS) {
         return false;
       }
     }
