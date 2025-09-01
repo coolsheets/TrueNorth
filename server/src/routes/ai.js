@@ -119,8 +119,7 @@ router.post('/offer-letter', async (req, res) => {
       messages: [
         { role: 'system', content: prompt },
         { role: 'user', content: JSON.stringify({ vehicle, priceAsk, findings }) }
-      ],
-      response_format: { type: "text" }
+      ]
     });
 
     const content = resp.choices[0]?.message?.content || '';
