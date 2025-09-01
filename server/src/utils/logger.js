@@ -57,7 +57,8 @@ function secureLog(message, data = null, sensitiveFields = ['vin', 'photos', 'ai
       console.log('Data:', sanitizedStr.slice(0, 200) + (sanitizedStr.length > 200 ? '...' : ''));
     } else {
       // In development, log limited data for debugging
-      console.log('Data:', JSON.stringify(data).slice(0, 200) + (JSON.stringify(data).length > 200 ? '...' : ''));
+      const dataStr = JSON.stringify(data);
+      console.log('Data:', dataStr.slice(0, 200) + (dataStr.length > 200 ? '...' : ''));
     }
   }
 }
