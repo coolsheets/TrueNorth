@@ -45,6 +45,7 @@ logs/
 .cache/
 .eslintcache
 vite.config.ts.timestamp-*
+*.tsbuildinfo
 
 # SSL Certificates
 *.pem
