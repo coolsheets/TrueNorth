@@ -1,5 +1,5 @@
 /* eslint-env node */
-/* global require, module, console */
+/* global require, module */
 /**
  * Inspections API routes
  * @module routes/inspections
@@ -7,6 +7,7 @@
 
 const { Router } = require('express');
 const Inspection = require('../models/Inspection.js');
+const { secureLog, secureErrorLog } = require('../utils/logger');
 const router = Router();
 
 router.get('/', async (req, res) => {
@@ -16,11 +17,10 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    console.log('Received inspection creation request');
-    console.log('Request body:', JSON.stringify(req.body).slice(0, 200) + '...');
+    secureLog('Received inspection creation request', req.body, ['vin', 'photos', 'airbagLocations']);
 
     if (!req.body.vehicle || !req.body.sections) {
-      console.error('Missing required fields in request');
+      secureErrorLog('Missing required fields in request');
       return res.status(400).json({ error: 'Missing required vehicle or sections data' });
     }
 
@@ -45,12 +45,12 @@ router.post('/', async (req, res) => {
       }))
     };
 
-    console.log('Creating inspection document in MongoDB');
+    secureLog('Creating inspection document in MongoDB');
     const doc = await Inspection.create(sanitizedData);
-    console.log('Inspection created with ID:', doc._id);
+    secureLog('Inspection created with ID:', { _id: doc._id });
     res.status(201).json(doc);
   } catch (err) {
-    console.error('Error creating inspection:', err);
+    secureErrorLog('Error creating inspection:', err);
     res.status(500).json({ error: 'Failed to create inspection', message: err.message });
   }
 });

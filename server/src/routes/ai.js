@@ -1,5 +1,5 @@
 /* eslint-env node */
-/* global require, module, console */
+/* global require, module */
 /**
  * AI-related endpoints for summarizing inspections and generating offer letters
  * @module routes/ai
@@ -7,6 +7,7 @@
 
 const { Router } = require('express');
 const { env } = require('../env.js');
+const { secureLog, secureErrorLog } = require('../utils/logger');
 
 /**
  * Helper function to ensure a value is an array of strings
@@ -45,21 +46,21 @@ const router = Router();
  */
 router.post('/summarize', async (req, res) => {
   try {
-    console.log('Received AI summarize request with body:', JSON.stringify(req.body).slice(0, 200) + '...');
+    secureLog('Received AI summarize request', req.body, ['vin', 'photos', 'airbagLocations']);
     
     const { vehicle, sections } = req.body;
     
     if (!vehicle || !sections) {
-      console.error('Missing required fields in request body');
+      secureErrorLog('Missing required fields in request body');
       return res.status(400).json({ error: 'Missing required fields in request body' });
     }
     
     if (!env.openaiKey) {
-      console.error('OpenAI API key is missing');
+      secureErrorLog('OpenAI API key is missing');
       return res.status(500).json({ error: 'API configuration error' });
     }
     
-    console.log('Initializing OpenAI client');
+    secureLog('Initializing OpenAI client');
     const openai = await import('openai');
     const client = new openai.default({ apiKey: env.openaiKey });
 
@@ -80,7 +81,7 @@ Output JSON with these keys:
 
 For redFlags, yellowFlags, and greenNotes arrays, all items must be simple strings. Format text mentions of amounts like "$X,XXX CAD for [reason]". Ensure your response is valid JSON.`;
 
-    console.log('Sending request to OpenAI API');
+    secureLog('Sending request to OpenAI API');
     const resp = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -90,12 +91,12 @@ For redFlags, yellowFlags, and greenNotes arrays, all items must be simple strin
       response_format: { type: "json_object" }
     });
 
-    console.log('Received response from OpenAI API');
+    secureLog('Received response from OpenAI API');
     const out = resp.choices[0]?.message?.content || '{}';
     try {
-      console.log('Parsing OpenAI response');
+      secureLog('Parsing OpenAI response');
       const parsedResponse = JSON.parse(out);
-      console.log('Successfully parsed response');
+      secureLog('Successfully parsed response');
       
       // Format the response for the client
       const formattedResponse = {
@@ -127,16 +128,15 @@ For redFlags, yellowFlags, and greenNotes arrays, all items must be simple strin
       
       res.json(formattedResponse);
     } catch (error) {
-      console.error('Error parsing OpenAI response:', error);
-      console.log('Raw response content:', out);
+      secureErrorLog('Error parsing OpenAI response:', error);
+      secureLog('Raw response content', { content: out });
       res.status(500).json({ 
         error: 'Failed to parse AI response',
         summary: 'There was an issue generating the summary. The AI response could not be properly formatted.'
       });
     }
   } catch (error) {
-    console.error('Error generating AI summary:', error);
-    console.error(error instanceof Error ? error.stack : 'Unknown error');
+    secureErrorLog('Error generating AI summary:', error);
     res.status(500).json({ error: 'Failed to generate AI summary' });
   }
 });
@@ -151,7 +151,7 @@ router.post('/offer-letter', async (req, res) => {
     const { vehicle, priceAsk, findings } = req.body;
     
     if (!env.openaiKey) {
-      console.error('OpenAI API key is missing');
+      secureErrorLog('OpenAI API key is missing');
       return res.status(500).json({ error: 'API configuration error' });
     }
     
@@ -171,7 +171,7 @@ router.post('/offer-letter', async (req, res) => {
     const content = resp.choices[0]?.message?.content || '';
     res.json({ email: content });
   } catch (error) {
-    console.error('Error generating offer letter:', error);
+    secureErrorLog('Error generating offer letter:', error);
     res.status(500).json({ error: 'Failed to generate offer letter' });
   }
 });

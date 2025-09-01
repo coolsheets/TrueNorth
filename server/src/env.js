@@ -21,6 +21,7 @@ function req(name) {
 }
 
 const env = {
+  nodeEnv: process.env.NODE_ENV || 'development',
   mongoUri: req('MONGODB_URI'),
   jwtSecret: req('JWT_SECRET'),
   bucket: req('CLOUD_BUCKET'),
@@ -28,5 +29,8 @@ const env = {
   openaiKey: req('OPENAI_API_KEY'),
   allowedOrigin: req('ALLOWED_ORIGIN')
 };
+
+// Helper to check if we're in production
+env.isProduction = env.nodeEnv === 'production';
 
 module.exports = { env };
