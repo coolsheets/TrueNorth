@@ -21,6 +21,7 @@
     "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.27.1",
     "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.3",
