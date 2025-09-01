@@ -51,18 +51,27 @@ This PR enhances the TrueNorth application with comprehensive PWA (Progressive W
 - SSL certificates are for development only and not included in production builds
 
 ## TO DO
+
+### Priority 1: Critical Fixes & Core Functionality
 - [ ] FIX: radio buttons in wheels/tires
 - [ ] ADD: Rust section back in
+- [ ] Conduct security review of offline data storage
+
+### Priority 2: Enhanced Data Collection & User Experience
+- [ ] ADD: Photos and ai review to pdf summary (with branding)
 - [ ] ADD: photo OCR for VIN, etc
 - [ ] ADD: Geolocation
+- [ ] Optimize service worker caching strategy for images
+
+### Priority 3: Business Value Features
 - [ ] ADD: Fair-market evaluation
-- [ ] ADD: Photos and ai review to pdf summary (with branding)
 - [ ] ADD: ability to generate offer letter
+
+### Priority 4: Advanced Media Capabilities
 - [ ] ADD: Audio and video recording, with transcription
-- [ ]
+
+### Priority 5: Quality Assurance & Documentation
 - [ ] Complete performance testing on low-end mobile devices
 - [ ] Add unit tests for offline synchronization logic
 - [ ] Create automated E2E tests for offline workflows
 - [ ] Update deployment documentation for PWA configuration
-- [ ] Optimize service worker caching strategy for images
-- [ ] Conduct security review of offline data storage
