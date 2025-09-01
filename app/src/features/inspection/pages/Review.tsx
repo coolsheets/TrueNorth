@@ -18,6 +18,14 @@ import { db, type InspectionDraft, type SectionState } from "../db";
 import { sections as templateSections } from "../schema";
 import { AISummary } from "../../../types/summary";
 
+/**
+ * Helper function to format a value for display text
+ * Ensures consistent handling of string vs non-string values
+ */
+const formatDisplayText = (value: any): string => {
+  return typeof value === 'string' ? value : JSON.stringify(value);
+};
+
 // Helper function to get status color
 const getStatusColor = (status: string) => {
   switch(status) {
@@ -248,7 +256,7 @@ export default function Review() {
                 </Typography>
                 
                 <Typography paragraph>
-                  {typeof summary.summary === 'string' ? summary.summary : JSON.stringify(summary.summary)}
+                  {formatDisplayText(summary.summary)}
                 </Typography>
                 
                 {summary.redFlags && summary.redFlags.length > 0 && (
@@ -257,7 +265,7 @@ export default function Review() {
                     <List>
                       {summary.redFlags.map((flag: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={typeof flag === 'string' ? flag : JSON.stringify(flag)} />
+                          <ListItemText primary={formatDisplayText(flag)} />
                         </ListItem>
                       ))}
                     </List>
@@ -270,7 +278,7 @@ export default function Review() {
                     <List>
                       {summary.yellowFlags.map((flag: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={typeof flag === 'string' ? flag : JSON.stringify(flag)} />
+                          <ListItemText primary={formatDisplayText(flag)} />
                         </ListItem>
                       ))}
                     </List>
@@ -283,7 +291,7 @@ export default function Review() {
                     <List>
                       {summary.greenNotes.map((note: any, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={typeof note === 'string' ? note : JSON.stringify(note)} />
+                          <ListItemText primary={formatDisplayText(note)} />
                         </ListItem>
                       ))}
                     </List>
