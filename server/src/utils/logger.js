@@ -10,10 +10,10 @@ const { env } = require('../env');
 /**
  * Sanitizes an object by removing sensitive fields or redacting them
  * @param {Object} obj - The object to sanitize
- * @param {string[]} [sensitiveFields=['vin', 'photos']] - List of sensitive field names to redact
+ * @param {string[]} [sensitiveFields=['vin', 'photos', 'airbagLocations']] - List of sensitive field names to redact
  * @returns {Object} - A sanitized copy of the object
  */
-function sanitizeObject(obj, sensitiveFields = ['vin', 'photos']) {
+function sanitizeObject(obj, sensitiveFields = ['vin', 'photos', 'airbagLocations']) {
   if (!obj || typeof obj !== 'object') {
     return obj;
   }
@@ -46,7 +46,7 @@ function sanitizeObject(obj, sensitiveFields = ['vin', 'photos']) {
  * @param {Object} [data] - Data to log (will be sanitized in production)
  * @param {string[]} [sensitiveFields] - Fields to redact
  */
-function secureLog(message, data = null, sensitiveFields = ['vin', 'photos']) {
+function secureLog(message, data = null, sensitiveFields = ['vin', 'photos', 'airbagLocations']) {
   console.log(message);
   
   if (data) {
