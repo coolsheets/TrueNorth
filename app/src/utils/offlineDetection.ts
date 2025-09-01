@@ -5,6 +5,20 @@
  * This handles cases where navigator.onLine may not be reliable
  */
 
+// Use any for now to avoid type conflicts with RequestInit
+type FetchRequest = RequestInfo | URL;
+type FetchOptions = any;
+
+/**
+ * Detects if the application is running in PWA mode
+ * @returns boolean indicating if the app is in PWA mode
+ */
+export function isPWAMode(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         window.matchMedia('(display-mode: fullscreen)').matches ||
+         document.referrer.includes('android-app://');
+}
+
 export function isBrowserOnline(): boolean {
   // Primary check - navigator.onLine
   if (!navigator.onLine) {
@@ -13,11 +27,7 @@ export function isBrowserOnline(): boolean {
   
   // If we're online according to navigator, let's be cautious and 
   // rely on additional heuristics when in PWA/standalone mode
-  const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                window.matchMedia('(display-mode: fullscreen)').matches ||
-                document.referrer.includes('android-app://');
-  
-  if (isPWA) {
+  if (isPWAMode()) {
     // Additional check - check if we have a connection type
     const connection = (navigator as any).connection || 
                       (navigator as any).mozConnection || 
@@ -69,7 +79,7 @@ export function setupOfflineListeners(): void {
 
   // Also catch fetch errors to detect when we're actually offline
   const originalFetch = window.fetch;
-  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  window.fetch = async (input: FetchRequest, init?: FetchOptions) => {
     try {
       const response = await originalFetch(input, init);
       if (response.ok) {
