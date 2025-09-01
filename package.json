@@ -1,6 +1,7 @@
 {
 	"name": "true-north",
 	"private": true,
+	"type": "module",
 	"workspaces": [
 		"app",
 		"server"
@@ -38,7 +39,7 @@
 		"build:shared": "node ./scripts/build-shared.js",
 		"build": "npm run build:shared && npm --prefix app run build && npm --prefix server run build",
 		"preview": "npm --prefix app run preview",
-		"lint": "eslint \"{app,server}/**/*.{ts,tsx,js}\"",
+		"lint": "eslint \"{app,server}/**/*.{ts,tsx,js}\" --ignore-pattern \"**/dist/**\" --ignore-pattern \"**/build/**\" --max-warnings=100",
 		"test": "npm --prefix app run test",
 		"e2e": "playwright test"
 	},
