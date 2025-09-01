@@ -89,7 +89,7 @@ The project's `vite.config.ts` file is already configured to use these certifica
 
 ```typescript
 server: { 
-  port: 5174,
+  port: 5173,
   host: '0.0.0.0', // Allow external access
   https: {
     key: './key.pem',
@@ -107,7 +107,7 @@ server: {
 ### Testing on Mobile Devices
 
 1. Start the development server: `npm run dev`
-2. Access the app on your mobile device using your local IP: `https://192.168.1.x:5174`
+2. Access the app on your mobile device using your local IP: `https://192.168.1.x:5173`
    (Make sure your phone is on the same WiFi network)
 3. Accept the certificate warning if prompted (should only happen once)
 4. Install as a PWA:
