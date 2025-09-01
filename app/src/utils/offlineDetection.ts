@@ -84,18 +84,22 @@ export function setupOfflineListeners(): void {
     registerConnectionFailure();
   });
 
-  // Also catch fetch errors to detect when we're actually offline
-  const originalFetch = window.fetch;
-  window.fetch = async (input: FetchRequest, init?: FetchOptions) => {
-    try {
-      const response = await originalFetch(input, init);
-      if (response.ok) {
-        clearConnectionFailure();
-      }
-      return response;
-    } catch (error) {
-      registerConnectionFailure();
-      throw error;
+  // If you want to track fetch errors for offline detection, use the offlineAwareFetch wrapper instead of window.fetch.
+}
+
+/**
+ * Wrapper for fetch that tracks connection failures for offline detection.
+ * Use this instead of window.fetch where enhanced offline detection is needed.
+ */
+export async function offlineAwareFetch(input: FetchRequest, init?: FetchOptions): Promise<Response> {
+  try {
+    const response = await window.fetch(input, init);
+    if (response.ok) {
+      clearConnectionFailure();
     }
-  };
+    return response;
+  } catch (error) {
+    registerConnectionFailure();
+    throw error;
+  }
 }
