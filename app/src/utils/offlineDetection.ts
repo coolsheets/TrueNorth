@@ -12,9 +12,9 @@
  */
 const CONNECTION_FAILURE_TIMEOUT_MS = 30000; // 30 seconds
 
-// Use any for now to avoid type conflicts with RequestInit
+// Use proper fetch API types
 type FetchRequest = RequestInfo | URL;
-type FetchOptions = any;
+type FetchOptions = Parameters<typeof window.fetch>[1];
 
 /**
  * Detects if the application is running in PWA mode
