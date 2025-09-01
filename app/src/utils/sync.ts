@@ -41,7 +41,7 @@ export async function syncInspections(): Promise<{ success: number; failed: numb
       console.log(`Syncing inspection ID: ${draft.id}`);
       
       // Use shared sanitization utility to clean data and convert client format to server format
-      const cleanedData = sanitizeInspectionData(draft, true);
+      const cleanedData = sanitizeInspectionData(draft, { clientToServer: true });
       
       const response = await fetch('/api/inspections', {
         method: 'POST',

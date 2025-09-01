@@ -4,6 +4,14 @@
 import { InspectionData, InspectionSection, InspectionItem, AISummary } from './types';
 
 /**
+ * Options for sanitization functions
+ */
+export interface SanitizationOptions {
+  /** Whether to convert from client format to server format */
+  clientToServer?: boolean;
+}
+
+/**
  * Processes a photo array to ensure it only contains valid strings
  * @param photos - The photos array to process
  * @returns An array of string photos
@@ -37,10 +45,14 @@ export function sanitizeInspectionItem(item: unknown): InspectionItem {
 /**
  * Sanitizes an inspection section
  * @param section - The section to sanitize
- * @param clientToServer - Whether to convert from client format to server format
+ * @param options - Sanitization options
  * @returns A sanitized inspection section
  */
-export function sanitizeInspectionSection(section: unknown, clientToServer = false): InspectionSection {
+export function sanitizeInspectionSection(
+  section: unknown, 
+  options: SanitizationOptions = {}
+): InspectionSection {
+  const { clientToServer = false } = options;
   const sectionObj = section as Record<string, unknown>;
   
   const sanitizedSection: InspectionSection = {
@@ -63,10 +75,15 @@ export function sanitizeInspectionSection(section: unknown, clientToServer = fal
 /**
  * Sanitizes an entire inspection data object
  * @param data - The inspection data to sanitize
- * @param clientToServer - Whether to convert from client format to server format
+ * @param options - Sanitization options
  * @returns A sanitized inspection data object
  */
-export function sanitizeInspectionData(data: unknown, clientToServer = false): InspectionData {
+export function sanitizeInspectionData(
+  data: unknown, 
+  options: SanitizationOptions = {}
+): InspectionData {
+  const { clientToServer = false } = options;
+  
   if (!data || typeof data !== 'object') {
     throw new Error('Invalid inspection data');
   }
@@ -80,7 +97,7 @@ export function sanitizeInspectionData(data: unknown, clientToServer = false): I
   
   // Sanitize sections
   const sections = Array.isArray(dataObj.sections)
-    ? dataObj.sections.map((section: unknown) => sanitizeInspectionSection(section, clientToServer))
+    ? dataObj.sections.map((section: unknown) => sanitizeInspectionSection(section, { clientToServer }))
     : [];
   
   // Handle dates
