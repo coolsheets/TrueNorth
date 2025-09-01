@@ -226,7 +226,7 @@ export default function Review() {
                                 <Chip 
                                   label={getStatusText(itemState.status)}
                                   size="small"
-                                  color={getStatusColor(itemState.status) as "success" | "warning" | "error" | "default"}
+                                  color={getStatusColor(itemState.status)}
                                   sx={{ ml: 1 }}
                                 />
                               </Box>

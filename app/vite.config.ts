@@ -6,7 +6,14 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      jsxImportSource: 'react',
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+        ]
+      }
+    }),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['**/*'],
