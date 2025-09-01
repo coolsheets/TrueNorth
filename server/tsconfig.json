@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "outDir": "dist",
     "rootDir": "..",
     "strict": true,
@@ -10,6 +10,8 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "composite": true,
+    "declaration": true,
     "baseUrl": ".",
     "paths": {
       "shared/*": ["../shared/*"]
