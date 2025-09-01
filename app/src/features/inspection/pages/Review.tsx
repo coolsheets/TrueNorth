@@ -23,8 +23,7 @@ import { AISummary, AdjustmentSuggestion } from "../../../types/summary";
  * Ensures consistent handling of string vs non-string values
  * This is a safety measure in case the API response format changes
  */
-const formatDisplayText = (value: unknown): string => {
-  return typeof value === 'string' ? value : JSON.stringify(value);
+  return typeof value === 'string' ? value : String(value);
 };
 
 // Helper function to get status color
