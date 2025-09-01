@@ -4,6 +4,12 @@ import { AISummary } from '../types/summary';
 import { sanitizeInspectionData } from '../../../shared/sanitization';
 
 /**
+ * Configuration constants for sync operations
+ */
+const SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
+const INITIAL_SYNC_DELAY_MS = 5000; // 5 seconds in milliseconds
+
+/**
  * Sync all unsynced inspection drafts to the server
  * @returns {Promise<{ success: number, failed: number }>} Count of successful and failed syncs
  */
@@ -82,12 +88,12 @@ export function setupSyncListeners(): void {
     if (isBrowserOnline()) {
       syncInspections();
     }
-  }, 5 * 60 * 1000);
+  }, SYNC_INTERVAL_MS);
   
   // Initial sync on startup (with small delay)
   setTimeout(() => {
     if (isBrowserOnline()) {
       syncInspections();
     }
-  }, 5000);
+  }, INITIAL_SYNC_DELAY_MS);
 }
