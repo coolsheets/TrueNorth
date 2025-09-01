@@ -29,7 +29,28 @@ npm run build
 npm run preview
 ```
 
-## 1) SSL Setup for Development
+## 1) AI Prompts
+
+This project uses AI-powered features for generating inspection summaries and offer letters. The prompts used for these features are stored in separate files in the `/server/src/prompts` directory for better maintainability and easier iteration.
+
+### Prompt Files
+
+- `inspectionSummary.js` - Prompt for generating inspection summaries with repair cost estimates
+- `offerLetter.js` - Prompt for generating professional offer emails based on inspection findings
+
+### Updating Prompts
+
+To modify the AI behavior, you can edit these prompt files without changing the application code. This allows for easier iteration and testing of different prompt strategies.
+
+```bash
+# Example: Edit the inspection summary prompt
+nano server/src/prompts/inspectionSummary.js
+
+# Run the server to test your changes
+npm run dev
+```
+
+## 2) SSL Setup for Development
 
 By default, the development server runs in HTTP mode for simplicity. To properly test PWA functionality on mobile devices, you'll need to set up HTTPS for local development. This section explains how to generate and configure SSL certificates.
 

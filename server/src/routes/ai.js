@@ -8,6 +8,7 @@
 const { Router } = require('express');
 const { env } = require('../env.js');
 const { secureLog, secureErrorLog } = require('../utils/logger');
+const { getInspectionSummaryPrompt, getOfferLetterPrompt } = require('../prompts');
 
 /**
  * Constants for inspection score bounds
@@ -71,21 +72,7 @@ router.post('/summarize', async (req, res) => {
     const client = new openai.default({ apiKey: env.openaiKey });
 
     const text = JSON.stringify({ vehicle, sections });
-    const prompt = `You are an expert used-vehicle inspector in Canada. Summarize red/yellow/green findings, estimate CAD repair ranges, and suggest a negotiation delta. 
-    
-Output JSON with these keys:
-- summary: string - Overall summary of vehicle condition (one paragraph of text)
-- redFlags: string[] - Array of strings describing critical issues
-- yellowFlags: string[] - Array of strings describing cautionary items
-- greenNotes: string[] - Array of strings describing positive aspects
-- estRepairTotalCAD: number - Estimated repair cost in CAD (just the number, no formatting)
-- inspectionScore: number - Overall vehicle score from ${INSPECTION_SCORE_MIN}-${INSPECTION_SCORE_MAX} (${INSPECTION_SCORE_MAX} being perfect condition)
-- suggestedAdjustments: object[] - Array of objects with negotiation suggestions, each having:
-  - type: string - Type of adjustment (e.g., "Suspension", "Body Damage")
-  - amount: number - Amount in CAD
-  - reason: string - Reason for the adjustment
-
-For redFlags, yellowFlags, and greenNotes arrays, all items must be simple strings. Format text mentions of amounts like "$X,XXX CAD for [reason]". Ensure your response is valid JSON.`;
+    const prompt = getInspectionSummaryPrompt(INSPECTION_SCORE_MIN, INSPECTION_SCORE_MAX);
 
     secureLog('Sending request to OpenAI API');
     const resp = await client.chat.completions.create({
@@ -164,7 +151,7 @@ router.post('/offer-letter', async (req, res) => {
     const openai = await import('openai');
     const client = new openai.default({ apiKey: env.openaiKey });
 
-    const prompt = `Draft a concise, professional buyer email for a Canadian used-vehicle purchase. Reflect inspection findings and propose an adjusted offer. Keep it 150-200 words.`;
+    const prompt = getOfferLetterPrompt();
 
     const resp = await client.chat.completions.create({
       model: 'gpt-4o-mini',
