@@ -10,6 +10,12 @@ const { env } = require('../env.js');
 const { secureLog, secureErrorLog } = require('../utils/logger');
 
 /**
+ * Constants for inspection score bounds
+ */
+const INSPECTION_SCORE_MIN = 0;
+const INSPECTION_SCORE_MAX = 100;
+
+/**
  * Helper function to ensure a value is an array of strings
  * @param {any} value - The value to convert
  * @returns {string[]} - An array of strings
@@ -21,16 +27,16 @@ const ensureStringArray = (value) => {
 /**
  * Validates and normalizes an inspection score
  * @param {any} score - The score to validate
- * @returns {number} - A normalized score between 0-100
+ * @returns {number} - A normalized score between INSPECTION_SCORE_MIN and INSPECTION_SCORE_MAX
  */
 const validateInspectionScore = (score) => {
   // Check if the score is a number
   if (typeof score !== 'number') {
-    return 0; // Default to 0 if not a number
+    return INSPECTION_SCORE_MIN; // Default to minimum score if not a number
   }
   
-  // Clamp the value between 0 and 100
-  return Math.min(Math.max(score, 0), 100);
+  // Clamp the value between MIN and MAX bounds
+  return Math.min(Math.max(score, INSPECTION_SCORE_MIN), INSPECTION_SCORE_MAX);
 };
 
 /**
@@ -73,7 +79,7 @@ Output JSON with these keys:
 - yellowFlags: string[] - Array of strings describing cautionary items
 - greenNotes: string[] - Array of strings describing positive aspects
 - estRepairTotalCAD: number - Estimated repair cost in CAD (just the number, no formatting)
-- inspectionScore: number - Overall vehicle score from 0-100 (100 being perfect condition)
+- inspectionScore: number - Overall vehicle score from ${INSPECTION_SCORE_MIN}-${INSPECTION_SCORE_MAX} (${INSPECTION_SCORE_MAX} being perfect condition)
 - suggestedAdjustments: object[] - Array of objects with negotiation suggestions, each having:
   - type: string - Type of adjustment (e.g., "Suspension", "Body Damage")
   - amount: number - Amount in CAD
