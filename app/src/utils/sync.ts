@@ -1,6 +1,7 @@
 import { db } from '../features/inspection/db';
 import { isBrowserOnline, registerConnectionFailure, setupOfflineListeners } from './offlineDetection';
 import { AISummary } from '../types/summary';
+import { sanitizeInspectionData } from '../../../shared/sanitization';
 
 /**
  * Sync all unsynced inspection drafts to the server
@@ -33,31 +34,15 @@ export async function syncInspections(): Promise<{ success: number; failed: numb
     try {
       console.log(`Syncing inspection ID: ${draft.id}`);
       
-      // Clean up the data before sending
-      // Note: In our client DB, sections use 'slug', but the server API expects 'name'
-      const cleanedSections = draft.sections.map(section => ({
-        name: section.slug, // Map slug (client) to name (server)
-        items: section.items.map(item => ({
-          id: item.id,
-          status: item.status,
-          notes: item.notes || "",
-          photos: Array.isArray(item.photos) ? 
-            item.photos.filter(p => typeof p === 'string') : []
-        }))
-      }));
+      // Use shared sanitization utility to clean data and convert client format to server format
+      const cleanedData = sanitizeInspectionData(draft, true);
       
       const response = await fetch('/api/inspections', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          vehicle: draft.vehicle,
-          sections: cleanedSections,
-          createdAt: new Date(draft.createdAt).toISOString(),
-          updatedAt: new Date(draft.updatedAt).toISOString(),
-          aiSummary: draft.aiSummary || null
-        }),
+        body: JSON.stringify(cleanedData),
       });
       
       if (response.ok) {

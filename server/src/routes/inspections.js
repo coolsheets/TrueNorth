@@ -8,6 +8,11 @@
 const { Router } = require('express');
 const Inspection = require('../models/Inspection.js');
 const { secureLog, secureErrorLog } = require('../utils/logger');
+const { requireShared } = require('../utils/sharedModules');
+
+// Import shared sanitization utility
+const { sanitizeInspectionData } = requireShared('/shared/sanitization');
+
 const router = Router();
 
 router.get('/', async (req, res) => {
@@ -24,26 +29,8 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required vehicle or sections data' });
     }
 
-    // Helper function to process photos array
-    const processPhotosArray = (photos) => {
-      if (!Array.isArray(photos)) {
-        return [];
-      }
-      return photos.filter(photo => typeof photo === 'string');
-    };
-
-    // Sanitize the data before saving to MongoDB
-    const sanitizedData = {
-      ...req.body,
-      sections: req.body.sections.map((section) => ({
-        ...section,
-        items: section.items.map((item) => ({
-          ...item,
-          // Ensure photos is always a proper array of strings
-          photos: processPhotosArray(item.photos)
-        }))
-      }))
-    };
+    // Use shared sanitization utility to clean and validate data
+    const sanitizedData = sanitizeInspectionData(req.body);
 
     secureLog('Creating inspection document in MongoDB');
     const doc = await Inspection.create(sanitizedData);
