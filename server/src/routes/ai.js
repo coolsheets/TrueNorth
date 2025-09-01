@@ -57,6 +57,7 @@ Output JSON with these keys:
 - yellowFlags: string[] - Array of strings describing cautionary items
 - greenNotes: string[] - Array of strings describing positive aspects
 - estRepairTotalCAD: number - Estimated repair cost in CAD (just the number, no formatting)
+- inspectionScore: number - Overall vehicle score from 0-100 (100 being perfect condition)
 - suggestedAdjustments: string[] - Array of strings with negotiation suggestions
 
 All array items must be simple strings, not objects. Format amounts like "$X,XXX CAD for [reason]". Ensure your response is valid JSON.`;
@@ -84,7 +85,9 @@ All array items must be simple strings, not objects. Format amounts like "$X,XXX
         redFlags: ensureStringArray(parsedResponse.redFlags),
         yellowFlags: ensureStringArray(parsedResponse.yellowFlags),
         greenNotes: ensureStringArray(parsedResponse.greenNotes),
-        inspectionScore: parsedResponse.inspectionScore || 0,
+        // Ensure inspectionScore is a number between 0-100
+        inspectionScore: typeof parsedResponse.inspectionScore === 'number' ? 
+          Math.min(Math.max(parsedResponse.inspectionScore, 0), 100) : 0,
         suggestedAdjustments: ensureStringArray(parsedResponse.suggestedAdjustments)
       };
       
