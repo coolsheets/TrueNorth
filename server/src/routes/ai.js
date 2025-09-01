@@ -9,6 +9,15 @@ const { Router } = require('express');
 const { env } = require('../env.js');
 
 /**
+ * Helper function to ensure a value is an array of strings
+ * @param {any} value - The value to convert
+ * @returns {string[]} - An array of strings
+ */
+const ensureStringArray = (value) => {
+  return Array.isArray(value) ? value.map(item => String(item)) : [];
+};
+
+/**
  * Express router for AI-related endpoints
  * @type {import('express').Router}
  */
@@ -72,11 +81,11 @@ All array items must be simple strings, not objects. Format amounts like "$X,XXX
       // Format the response for the client
       const formattedResponse = {
         summary: parsedResponse.summary || '',
-        redFlags: Array.isArray(parsedResponse.redFlags) ? parsedResponse.redFlags.map(item => String(item)) : [],
-        yellowFlags: Array.isArray(parsedResponse.yellowFlags) ? parsedResponse.yellowFlags.map(item => String(item)) : [],
-        greenNotes: Array.isArray(parsedResponse.greenNotes) ? parsedResponse.greenNotes.map(item => String(item)) : [],
+        redFlags: ensureStringArray(parsedResponse.redFlags),
+        yellowFlags: ensureStringArray(parsedResponse.yellowFlags),
+        greenNotes: ensureStringArray(parsedResponse.greenNotes),
         inspectionScore: parsedResponse.inspectionScore || 0,
-        suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? parsedResponse.suggestedAdjustments.map(item => String(item)) : []
+        suggestedAdjustments: ensureStringArray(parsedResponse.suggestedAdjustments)
       };
       
       res.json(formattedResponse);
