@@ -302,15 +302,10 @@ export default function Review() {
                   <>
                     <Typography variant="h6" sx={{ mt: 2 }}>Suggested Negotiation Points:</Typography>
                     <List>
-                      {summary.suggestedAdjustments.map((adj: any, index: number) => (
+                      {summary.suggestedAdjustments.map((adj, index) => (
                         <ListItem key={index}>
                           <ListItemText 
-                            primary={typeof adj === 'string' 
-                              ? adj 
-                              : adj.type 
-                                ? `${adj.type}: $${adj.amount} CAD${adj.reason ? ' - ' + adj.reason : ''}`
-                                : JSON.stringify(adj)
-                            } 
+                            primary={`${adj.type}: $${adj.amount.toLocaleString('en-CA')} CAD${adj.reason ? ' - ' + adj.reason : ''}`} 
                           />
                         </ListItem>
                       ))}

@@ -58,9 +58,12 @@ Output JSON with these keys:
 - greenNotes: string[] - Array of strings describing positive aspects
 - estRepairTotalCAD: number - Estimated repair cost in CAD (just the number, no formatting)
 - inspectionScore: number - Overall vehicle score from 0-100 (100 being perfect condition)
-- suggestedAdjustments: string[] - Array of strings with negotiation suggestions
+- suggestedAdjustments: object[] - Array of objects with negotiation suggestions, each having:
+  - type: string - Type of adjustment (e.g., "Suspension", "Body Damage")
+  - amount: number - Amount in CAD
+  - reason: string - Reason for the adjustment
 
-All array items must be simple strings, not objects. Format amounts like "$X,XXX CAD for [reason]". Ensure your response is valid JSON.`;
+For redFlags, yellowFlags, and greenNotes arrays, all items must be simple strings. Format text mentions of amounts like "$X,XXX CAD for [reason]". Ensure your response is valid JSON.`;
 
     console.log('Sending request to OpenAI API');
     const resp = await client.chat.completions.create({
@@ -88,7 +91,24 @@ All array items must be simple strings, not objects. Format amounts like "$X,XXX
         // Ensure inspectionScore is a number between 0-100
         inspectionScore: typeof parsedResponse.inspectionScore === 'number' ? 
           Math.min(Math.max(parsedResponse.inspectionScore, 0), 100) : 0,
-        suggestedAdjustments: ensureStringArray(parsedResponse.suggestedAdjustments)
+        // Process suggestedAdjustments as objects
+        suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? 
+          parsedResponse.suggestedAdjustments.map(adj => {
+            // If it's already an object with the expected structure, use it as is
+            if (typeof adj === 'object' && adj !== null && 'type' in adj && 'amount' in adj) {
+              return {
+                type: String(adj.type),
+                amount: typeof adj.amount === 'number' ? adj.amount : parseFloat(String(adj.amount)) || 0,
+                reason: adj.reason ? String(adj.reason) : ''
+              };
+            }
+            // If it's a string or another format, convert to a simple object
+            return {
+              type: 'Adjustment',
+              amount: 0,
+              reason: typeof adj === 'string' ? adj : String(adj)
+            };
+          }) : []
       };
       
       res.json(formattedResponse);

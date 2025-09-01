@@ -102,6 +102,19 @@ export async function buildPdf({
         });
         y -= 12;
       }
+      
+      // Add suggested adjustments
+      if (aiSummary.suggestedAdjustments && aiSummary.suggestedAdjustments.length > 0) {
+        y -= 8;
+        page.drawText('SUGGESTED ADJUSTMENTS:', { x: 48, y, size: 10, font: boldFont });
+        y -= 14;
+        
+        aiSummary.suggestedAdjustments.forEach(adj => {
+          const text = `- ${adj.type}: $${adj.amount.toLocaleString('en-CA')} CAD${adj.reason ? ' - ' + adj.reason : ''}`;
+          page.drawText(text.slice(0, 75), { x: 60, y, size: 9, font });
+          y -= 12;
+        });
+      }
     }
     
     y -= 16;

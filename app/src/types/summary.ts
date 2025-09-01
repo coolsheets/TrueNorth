@@ -1,4 +1,13 @@
 /**
+ * Interface for adjustment suggestion from AI
+ */
+export interface AdjustmentSuggestion {
+  type: string;  // Type of adjustment (e.g., "Suspension", "Body Damage")
+  amount: number; // Amount in CAD
+  reason: string; // Reason for the adjustment
+}
+
+/**
  * Interface for AI-generated inspection summary
  */
 export interface AISummary {
@@ -8,5 +17,5 @@ export interface AISummary {
   greenNotes: string[];
   inspectionScore: number;
   estRepairTotalCAD?: number;
-  suggestedAdjustments: string[];
+  suggestedAdjustments: AdjustmentSuggestion[];
 }
