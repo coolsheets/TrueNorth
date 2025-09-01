@@ -18,6 +18,21 @@ const ensureStringArray = (value) => {
 };
 
 /**
+ * Validates and normalizes an inspection score
+ * @param {any} score - The score to validate
+ * @returns {number} - A normalized score between 0-100
+ */
+const validateInspectionScore = (score) => {
+  // Check if the score is a number
+  if (typeof score !== 'number') {
+    return 0; // Default to 0 if not a number
+  }
+  
+  // Clamp the value between 0 and 100
+  return Math.min(Math.max(score, 0), 100);
+};
+
+/**
  * Express router for AI-related endpoints
  * @type {import('express').Router}
  */
@@ -88,9 +103,8 @@ For redFlags, yellowFlags, and greenNotes arrays, all items must be simple strin
         redFlags: ensureStringArray(parsedResponse.redFlags),
         yellowFlags: ensureStringArray(parsedResponse.yellowFlags),
         greenNotes: ensureStringArray(parsedResponse.greenNotes),
-        // Ensure inspectionScore is a number between 0-100
-        inspectionScore: typeof parsedResponse.inspectionScore === 'number' ? 
-          Math.min(Math.max(parsedResponse.inspectionScore, 0), 100) : 0,
+        // Validate and normalize the inspection score
+        inspectionScore: validateInspectionScore(parsedResponse.inspectionScore),
         // Process suggestedAdjustments as objects
         suggestedAdjustments: Array.isArray(parsedResponse.suggestedAdjustments) ? 
           parsedResponse.suggestedAdjustments.map(adj => {
