@@ -89,6 +89,14 @@ export default defineConfig({
 
 /**
  * Generate server configuration with conditional HTTPS support
+ * 
+ * HTTPS Configuration:
+ * - By default, the server runs in HTTP mode for simpler development setup
+ * - To enable HTTPS, set the environment variable USE_HTTPS=true
+ * - When HTTPS is enabled, valid SSL certificates are required:
+ *   - Default paths: ./key.pem and ./cert.pem in the project root
+ *   - Custom paths can be specified with SSL_KEY_PATH and SSL_CERT_PATH environment variables
+ * 
  * @returns Server configuration object for Vite
  */
 function getServerConfig() {
@@ -104,8 +112,8 @@ function getServerConfig() {
     }
   };
   
-  // Only add HTTPS if enabled and certificates exist or are specified
-  const useHttps = process.env.USE_HTTPS !== 'false'; // Default to true unless explicitly disabled
+  // Only add HTTPS if explicitly enabled (default to false for simpler dev setup)
+  const useHttps = process.env.USE_HTTPS === 'true'; // Default to false unless explicitly enabled
   
   if (useHttps) {
     // Get certificate paths from environment or use defaults
@@ -127,12 +135,13 @@ function getServerConfig() {
       });
     } else {
       console.warn(
-        `SSL certificates not found at ${keyPath} and/or ${certPath}. ` +
-        `Running in HTTP mode. Set USE_HTTPS=false to suppress this warning.`
+        `HTTPS is enabled, but SSL certificates were not found at ${keyPath} and/or ${certPath}. \n` +
+        `You need valid SSL certificates for HTTPS mode to work properly. \n` +
+        `The server will fall back to HTTP mode. To suppress this warning, set USE_HTTPS=false.`
       );
     }
   } else {
-    console.log('HTTPS disabled by configuration. Running in HTTP mode.');
+    console.log('Running in HTTP mode. To enable HTTPS, set USE_HTTPS=true and provide valid certificates.');
   }
   
   return serverConfig;

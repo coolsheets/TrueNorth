@@ -31,7 +31,7 @@ npm run preview
 
 ## 1) SSL Setup for Development
 
-To properly test PWA functionality on mobile devices, you need to set up HTTPS for local development.
+By default, the development server runs in HTTP mode for simplicity. To properly test PWA functionality on mobile devices, you'll need to set up HTTPS for local development. This section explains how to generate and configure SSL certificates.
 
 ### Prerequisites
 - Node.js and npm (already part of the project setup)
@@ -85,13 +85,25 @@ mkcert -key-file key.pem -cert-file cert.pem localhost 127.0.0.1 192.168.1.x
 
 ### Configuring Vite for HTTPS
 
-The project's `vite.config.ts` file is already configured to use SSL certificates:
+The project's `vite.config.ts` file is configured to conditionally use SSL certificates when HTTPS is enabled:
 
 ```typescript
-server: { 
-  https: {
-    key: fs.readFileSync('./key.pem'),
-    cert: fs.readFileSync('./cert.pem')
+// Only add HTTPS if explicitly enabled (default to false for simpler dev setup)
+const useHttps = process.env.USE_HTTPS === 'true'; // Default to false unless explicitly enabled
+
+if (useHttps) {
+  // Get certificate paths from environment or use defaults
+  const keyPath = process.env.SSL_KEY_PATH || './key.pem';
+  const certPath = process.env.SSL_CERT_PATH || './cert.pem';
+  
+  // Only configure HTTPS if both files exist
+  if (keyExists && certExists) {
+    Object.assign(serverConfig, {
+      https: {
+        key: fs.readFileSync(path.resolve(keyPath)),
+        cert: fs.readFileSync(path.resolve(certPath))
+      }
+    });
   }
 }
 ```
@@ -100,7 +112,7 @@ server: {
 
 You can customize the SSL configuration using the following environment variables:
 
-- `USE_HTTPS`: Set to `false` to disable HTTPS and use HTTP instead.
+- `USE_HTTPS`: Set to `true` to enable HTTPS (default: `false`).
 - `SSL_KEY_PATH`: Path to the SSL key file (default: `./key.pem`).
 - `SSL_CERT_PATH`: Path to the SSL certificate file (default: `./cert.pem`).
 - `PORT`: The port to run the development server on (default: `5173`).
@@ -109,40 +121,26 @@ You can customize the SSL configuration using the following environment variable
 Example usage:
 
 ```bash
-# Run with custom certificate paths
-SSL_KEY_PATH=/path/to/key.pem SSL_CERT_PATH=/path/to/cert.pem npm run dev
+# Enable HTTPS (you need valid certificates for this to work)
+USE_HTTPS=true npm run dev
 
-# Run without HTTPS
-USE_HTTPS=false npm run dev
+# Enable HTTPS with custom certificate paths
+USE_HTTPS=true SSL_KEY_PATH=/path/to/key.pem SSL_CERT_PATH=/path/to/cert.pem npm run dev
 
 # Run on a different port
 PORT=3000 npm run dev
 ```
 
-If the specified certificate files don't exist, the server will fall back to HTTP mode with a warning message.
-server: { 
-  port: 5173,
-  host: '0.0.0.0', // Allow external access
-  https: {
-    key: './key.pem',
-    cert: './cert.pem',
-  },
-  proxy: {
-    '/api': {
-      target: 'http://localhost:8080',
-      changeOrigin: true
-    }
-  }
-}
-```
+If HTTPS is enabled but the specified certificate files don't exist, the server will fall back to HTTP mode with a warning message.
 
 ### Testing on Mobile Devices
 
-1. Start the development server: `npm run dev`
-2. Access the app on your mobile device using your local IP: `https://192.168.1.x:5173`
+1. Generate SSL certificates as described above
+2. Start the development server with HTTPS enabled: `USE_HTTPS=true npm run dev`
+3. Access the app on your mobile device using your local IP: `https://192.168.1.x:5173`
    (Make sure your phone is on the same WiFi network)
-3. Accept the certificate warning if prompted (should only happen once)
-4. Install as a PWA:
+4. Accept the certificate warning if prompted (should only happen once)
+5. Install as a PWA:
    - On Android: Tap the Chrome menu and select "Add to Home screen"
    - On iOS: Tap the share button and select "Add to Home Screen"
 
