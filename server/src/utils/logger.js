@@ -53,7 +53,8 @@ function secureLog(message, data = null, sensitiveFields = ['vin', 'photos', 'ai
     if (env.isProduction) {
       // In production, sanitize the data before logging
       const sanitized = sanitizeObject(data, sensitiveFields);
-      console.log('Data:', JSON.stringify(sanitized).slice(0, 200) + (JSON.stringify(sanitized).length > 200 ? '...' : ''));
+      const sanitizedStr = JSON.stringify(sanitized);
+      console.log('Data:', sanitizedStr.slice(0, 200) + (sanitizedStr.length > 200 ? '...' : ''));
     } else {
       // In development, log limited data for debugging
       console.log('Data:', JSON.stringify(data).slice(0, 200) + (JSON.stringify(data).length > 200 ? '...' : ''));
