@@ -24,6 +24,14 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required vehicle or sections data' });
     }
 
+    // Helper function to process photos array
+    const processPhotosArray = (photos) => {
+      if (!Array.isArray(photos)) {
+        return [];
+      }
+      return photos.filter(photo => typeof photo === 'string');
+    };
+
     // Sanitize the data before saving to MongoDB
     const sanitizedData = {
       ...req.body,
@@ -32,9 +40,7 @@ router.post('/', async (req, res) => {
         items: section.items.map((item) => ({
           ...item,
           // Ensure photos is always a proper array of strings
-          photos: Array.isArray(item.photos) ? 
-            item.photos.filter((p) => typeof p === 'string') : 
-            []
+          photos: processPhotosArray(item.photos)
         }))
       }))
     };
