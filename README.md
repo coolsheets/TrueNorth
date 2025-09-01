@@ -85,9 +85,41 @@ mkcert -key-file key.pem -cert-file cert.pem localhost 127.0.0.1 192.168.1.x
 
 ### Configuring Vite for HTTPS
 
-The project's `vite.config.ts` file is already configured to use these certificates:
+The project's `vite.config.ts` file is already configured to use SSL certificates:
 
 ```typescript
+server: { 
+  https: {
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem')
+  }
+}
+```
+
+### Environment Variables for SSL Configuration
+
+You can customize the SSL configuration using the following environment variables:
+
+- `USE_HTTPS`: Set to `false` to disable HTTPS and use HTTP instead.
+- `SSL_KEY_PATH`: Path to the SSL key file (default: `./key.pem`).
+- `SSL_CERT_PATH`: Path to the SSL certificate file (default: `./cert.pem`).
+- `PORT`: The port to run the development server on (default: `5173`).
+- `API_URL`: The URL of the API server (default: `http://localhost:8080`).
+
+Example usage:
+
+```bash
+# Run with custom certificate paths
+SSL_KEY_PATH=/path/to/key.pem SSL_CERT_PATH=/path/to/cert.pem npm run dev
+
+# Run without HTTPS
+USE_HTTPS=false npm run dev
+
+# Run on a different port
+PORT=3000 npm run dev
+```
+
+If the specified certificate files don't exist, the server will fall back to HTTP mode with a warning message.
 server: { 
   port: 5173,
   host: '0.0.0.0', // Allow external access

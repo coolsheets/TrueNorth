@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
+import path from 'path';
 
 export default defineConfig({
   plugins: [
@@ -82,18 +84,56 @@ export default defineConfig({
       }
     })
   ],
-  server: { 
-    port: 5173,
+  server: getServerConfig()
+});
+
+/**
+ * Generate server configuration with conditional HTTPS support
+ * @returns Server configuration object for Vite
+ */
+function getServerConfig() {
+  // Base server config
+  const serverConfig = {
+    port: parseInt(process.env.PORT || '5173'),
     host: '0.0.0.0', // Allow external access
-    https: {
-      key: './key.pem',
-      cert: './cert.pem',
-    },
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: process.env.API_URL || 'http://localhost:8080',
         changeOrigin: true
       }
     }
+  };
+  
+  // Only add HTTPS if enabled and certificates exist or are specified
+  const useHttps = process.env.USE_HTTPS !== 'false'; // Default to true unless explicitly disabled
+  
+  if (useHttps) {
+    // Get certificate paths from environment or use defaults
+    const keyPath = process.env.SSL_KEY_PATH || './key.pem';
+    const certPath = process.env.SSL_CERT_PATH || './cert.pem';
+    
+    // Check if certificate files exist
+    const keyExists = fs.existsSync(path.resolve(keyPath));
+    const certExists = fs.existsSync(path.resolve(certPath));
+    
+    // Only configure HTTPS if both files exist
+    if (keyExists && certExists) {
+      console.log(`Using SSL certificates: ${keyPath} and ${certPath}`);
+      Object.assign(serverConfig, {
+        https: {
+          key: fs.readFileSync(path.resolve(keyPath)),
+          cert: fs.readFileSync(path.resolve(certPath))
+        }
+      });
+    } else {
+      console.warn(
+        `SSL certificates not found at ${keyPath} and/or ${certPath}. ` +
+        `Running in HTTP mode. Set USE_HTTPS=false to suppress this warning.`
+      );
+    }
+  } else {
+    console.log('HTTPS disabled by configuration. Running in HTTP mode.');
   }
-});
+  
+  return serverConfig;
+}
