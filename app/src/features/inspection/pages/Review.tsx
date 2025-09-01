@@ -16,18 +16,19 @@ import {
 import Card from "../../../components/Card";
 import { db, type InspectionDraft, type SectionState } from "../db";
 import { sections as templateSections } from "../schema";
-import { AISummary } from "../../../types/summary";
+import { AISummary, AdjustmentSuggestion } from "../../../types/summary";
 
 /**
  * Helper function to format a value for display text
  * Ensures consistent handling of string vs non-string values
+ * This is a safety measure in case the API response format changes
  */
-const formatDisplayText = (value: any): string => {
+const formatDisplayText = (value: unknown): string => {
   return typeof value === 'string' ? value : JSON.stringify(value);
 };
 
 // Helper function to get status color
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string): "success" | "warning" | "error" | "default" => {
   switch(status) {
     case 'ok': return 'success';
     case 'warn': return 'warning';
@@ -225,7 +226,7 @@ export default function Review() {
                                 <Chip 
                                   label={getStatusText(itemState.status)}
                                   size="small"
-                                  color={getStatusColor(itemState.status) as any}
+                                  color={getStatusColor(itemState.status) as "success" | "warning" | "error" | "default"}
                                   sx={{ ml: 1 }}
                                 />
                               </Box>
@@ -263,7 +264,7 @@ export default function Review() {
                   <>
                     <Typography variant="h6" color="error">Red Flags:</Typography>
                     <List>
-                      {summary.redFlags.map((flag: any, index: number) => (
+                      {summary.redFlags.map((flag: string, index: number) => (
                         <ListItem key={index}>
                           <ListItemText primary={formatDisplayText(flag)} />
                         </ListItem>
@@ -276,7 +277,7 @@ export default function Review() {
                   <>
                     <Typography variant="h6" color="warning.main">Caution Items:</Typography>
                     <List>
-                      {summary.yellowFlags.map((flag: any, index: number) => (
+                      {summary.yellowFlags.map((flag: string, index: number) => (
                         <ListItem key={index}>
                           <ListItemText primary={formatDisplayText(flag)} />
                         </ListItem>
@@ -289,7 +290,7 @@ export default function Review() {
                   <>
                     <Typography variant="h6" color="success.main">Positive Notes:</Typography>
                     <List>
-                      {summary.greenNotes.map((note: any, index: number) => (
+                      {summary.greenNotes.map((note: string, index: number) => (
                         <ListItem key={index}>
                           <ListItemText primary={formatDisplayText(note)} />
                         </ListItem>
@@ -302,7 +303,7 @@ export default function Review() {
                   <Typography variant="h6" sx={{ mt: 2 }}>
                     Estimated Repair Cost: ${typeof summary.estRepairTotalCAD === 'number' 
                       ? summary.estRepairTotalCAD.toLocaleString('en-CA') 
-                      : summary.estRepairTotalCAD} CAD
+                      : formatDisplayText(summary.estRepairTotalCAD)} CAD
                   </Typography>
                 )}
                 
@@ -310,7 +311,7 @@ export default function Review() {
                   <>
                     <Typography variant="h6" sx={{ mt: 2 }}>Suggested Negotiation Points:</Typography>
                     <List>
-                      {summary.suggestedAdjustments.map((adj, index) => (
+                      {summary.suggestedAdjustments.map((adj: AdjustmentSuggestion, index: number) => (
                         <ListItem key={index}>
                           <ListItemText 
                             primary={`${adj.type}: $${adj.amount.toLocaleString('en-CA')} CAD${adj.reason ? ' - ' + adj.reason : ''}`} 
