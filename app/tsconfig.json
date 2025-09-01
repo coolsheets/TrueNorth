@@ -11,8 +11,10 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "composite": false,
+    "noEmit": false,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
     "types": ["vitest/globals", "vite/client"]
   },
   "include": [
@@ -20,5 +22,9 @@
     "src/**/*.tsx",
     "src/**/*.d.ts",
     "../shared/**/*.ts"
+  ],
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "./tsconfig.sw.json" }
   ]
 }
