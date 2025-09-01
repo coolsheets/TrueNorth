@@ -33,8 +33,9 @@ export async function syncInspections(): Promise<{ success: number; failed: numb
       console.log(`Syncing inspection ID: ${draft.id}`);
       
       // Clean up the data before sending
+      // Note: In our client DB, sections use 'slug', but the server API expects 'name'
       const cleanedSections = draft.sections.map(section => ({
-        name: section.slug,
+        name: section.slug, // Map slug (client) to name (server)
         items: section.items.map(item => ({
           id: item.id,
           status: item.status,
