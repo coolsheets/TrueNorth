@@ -12,6 +12,16 @@ const { getInspectionSummaryPrompt, getOfferLetterPrompt } = require('../prompts
 
 /**
  * Constants for inspection score bounds
+ * 
+ * The inspection score follows a standard 0-100 scale where:
+ * - 0 represents a vehicle in completely unusable/unsalvageable condition
+ * - 100 represents a vehicle in perfect/like-new condition
+ * 
+ * This scale was chosen because:
+ * 1. It's intuitive for users (follows common percentage-based scoring)
+ * 2. It provides sufficient granularity for vehicle condition assessment
+ * 3. It aligns with industry-standard vehicle condition rating systems
+ * 4. It simplifies score normalization and comparison across different vehicles
  */
 const INSPECTION_SCORE_MIN = 0;
 const INSPECTION_SCORE_MAX = 100;
@@ -33,7 +43,16 @@ const ensureStringArray = (value) => {
 const validateInspectionScore = (score) => {
   // Check if the score is a number
   if (typeof score !== 'number' || isNaN(score)) {
+    secureErrorLog('Invalid inspection score format:', { score });
     return null; // Return null to explicitly indicate invalid input
+  }
+  
+  // Log if the original score was outside the expected bounds
+  if (score < INSPECTION_SCORE_MIN || score > INSPECTION_SCORE_MAX) {
+    secureLog('Normalizing out-of-range inspection score:', { 
+      originalScore: score, 
+      normalizedScore: Math.min(Math.max(score, INSPECTION_SCORE_MIN), INSPECTION_SCORE_MAX)
+    });
   }
   
   // Clamp the value between MIN and MAX bounds
