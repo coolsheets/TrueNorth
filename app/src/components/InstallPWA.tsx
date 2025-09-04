@@ -75,23 +75,36 @@ const InstallPWA: React.FC = () => {
     try {
       if (promptAvailable) {
         // Try the original method first
+        console.log('Using stored prompt...');
         showInstallPrompt();
         
         // If the original method doesn't work, try our manual method
         setTimeout(async () => {
           try {
+            console.log('Trying manual prompt as a fallback...');
             await manualShowInstallPrompt();
           } catch (error) {
             // Manual method failed too, that's okay
             console.log('Manual installation prompt failed, user may have declined', error);
+            
+            // Show a more user-friendly message
+            alert('Installation not available. Your browser may already have this app installed, or your browser may not support PWA installation.\n\nTry using Chrome, Edge, or Safari.');
           }
         }, 500);
       } else {
-        await manualShowInstallPrompt();
+        console.log('No prompt available, trying manual method directly...');
+        try {
+          await manualShowInstallPrompt();
+        } catch (error) {
+          console.error('Installation error:', error);
+          
+          // Show a helpful error message that doesn't expose technical details
+          alert('This app cannot be installed right now. Please make sure you\'re using a supported browser and that you\'re not already in PWA mode.');
+        }
       }
     } catch (error) {
       console.error('Installation error:', error);
-      alert(`Could not show installation prompt: ${error}`);
+      alert(`Installation is currently unavailable. Please try again later.`);
     }
   };
 

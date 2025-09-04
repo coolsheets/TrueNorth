@@ -30,6 +30,29 @@ export function checkInstallationStatus() {
 export function manualShowInstallPrompt() {
   if (!deferredPrompt) {
     console.log('No installation prompt available');
+    
+    // Check if already in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      return Promise.reject('App is already installed');
+    }
+    
+    // Check if service worker is registered
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.getRegistration().then(registration => {
+        if (!registration) {
+          console.error('Service worker not registered - PWA criteria not met');
+        }
+      });
+    }
+    
+    // Log more detailed diagnostics
+    console.error('PWA installation diagnostics:', {
+      serviceWorkerSupported: 'serviceWorker' in navigator,
+      isHTTPS: window.location.protocol === 'https:' || window.location.hostname === 'localhost',
+      promptStored: !!deferredPrompt,
+      alreadyInstalled: window.matchMedia('(display-mode: standalone)').matches
+    });
+    
     return Promise.reject('No installation prompt available');
   }
 
