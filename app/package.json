@@ -5,6 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:https": "vite",
+    "dev:mobile": "vite --host",
+    "dev:mobile:https": "vite --host",
+    "dev:localhost": "vite",
+    "gen-certs": "../scripts/generate-certs.sh",
+    "setup-pwa": "npm run gen-certs && npm run dev:https",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"

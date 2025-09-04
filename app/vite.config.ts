@@ -8,6 +8,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*'],
+      injectRegister: 'auto',  // Try auto registration instead
+      strategies: 'generateSW', // Default strategy
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       manifest: {
         name: 'PPI Canada',
         short_name: 'PPI',
@@ -21,6 +27,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           { urlPattern: /\/api\//, handler: 'NetworkFirst', options: { cacheName: 'api' } }
@@ -28,5 +35,11 @@ export default defineConfig({
       }
     })
   ],
-  server: { port: 5173 }
+  server: { 
+    port: 5173,
+    https: {
+      key: './key.pem',  // Path relative to app directory
+      cert: './cert.pem' // Path relative to app directory
+    }  // Use HTTPS for local development
+  }
 });
