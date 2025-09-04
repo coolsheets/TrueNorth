@@ -6,6 +6,24 @@ import App from './App';
 import theme from './styles/theme';
 import './styles/index.css';
 import './registerSW';
+// Import virtual module from VitePWA
+import { registerSW } from 'virtual:pwa-register';
+
+// Register the service worker using VitePWA
+const updateSW = registerSW({
+  onNeedRefresh() {
+    console.log('New content available, click on reload button to update.');
+  },
+  onOfflineReady() {
+    console.log('App ready to work offline');
+  },
+  onRegistered(registration) {
+    console.log('Service worker has been registered', registration);
+  },
+  onRegisterError(error) {
+    console.error('Service worker registration error', error);
+  }
+});
 
 // Opt into future behavior for React Router
 const routerOptions = {

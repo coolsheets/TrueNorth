@@ -1,18 +1,39 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
+
+// Custom plugin to ensure service worker files get the correct MIME type
+function serviceWorkerContentTypePlugin(): Plugin {
+  return {
+    name: 'configure-service-worker-content-type',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        // Check if the request is for a service worker file
+        if (req.url?.endsWith('.js') && (req.url?.includes('/sw.js') || req.url?.includes('/service-worker.js') || req.url?.includes('/registerSW.js'))) {
+          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+          res.setHeader('Service-Worker-Allowed', '/');
+        }
+        next();
+      });
+    }
+  };
+};
 
 export default defineConfig({
   plugins: [
     react(),
+    serviceWorkerContentTypePlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // Change to manual registration
       includeAssets: ['icons/*'],
-      injectRegister: 'auto',  // Try auto registration instead
-      strategies: 'generateSW', // Default strategy
+      injectRegister: 'script', // Change to script to avoid auto registration issues
+      strategies: 'generateSW',
+      filename: 'sw.js', // Explicitly set the service worker filename
       devOptions: {
         enabled: true,
-        type: 'module'
+        type: 'module',
+        navigateFallback: 'index.html'
       },
       manifest: {
         name: 'PPI Canada',
@@ -38,8 +59,8 @@ export default defineConfig({
   server: { 
     port: 5173,
     https: {
-      key: './key.pem',  // Path relative to app directory
-      cert: './cert.pem' // Path relative to app directory
-    }  // Use HTTPS for local development
+      key: fs.readFileSync('./key.pem'),
+      cert: fs.readFileSync('./cert.pem'),
+    }
   }
 });
