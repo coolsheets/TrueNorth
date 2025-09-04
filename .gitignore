@@ -20,6 +20,9 @@ coverage/
 server/.env
 app/.env
 
+# https cetrificates
+*.pem
+
 # IDE / editor
 .vscode/
 .idea/
