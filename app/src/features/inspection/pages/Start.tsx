@@ -12,6 +12,7 @@ import {
   CircularProgress
 } from "@mui/material";
 import Card from "../../../components/Card";
+import PWAStatus from "../../../components/PWAStatus";
 import { db, type InspectionDraft, type SectionState, type ItemState } from "../db";
 import { sections as templateSections } from "../schema";
 
@@ -123,6 +124,9 @@ export default function Start() {
           </List>
         )}
       </Card>
+
+      {/* PWA Status Component for testing offline functionality */}
+      <PWAStatus />
 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
         Tip: After creating a draft you will be routed to <Box component="code" sx={{ px: 0.5 }}>/vehicle</Box> to enter VIN, year, etc., then continue through the sections.

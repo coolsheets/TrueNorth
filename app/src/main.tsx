@@ -5,6 +5,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import App from './App';
 import theme from './styles/theme';
 import './styles/index.css';
+import './registerSW';
 
 // Opt into future behavior for React Router
 const routerOptions = {
