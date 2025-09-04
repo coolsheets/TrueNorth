@@ -50,5 +50,4 @@ Added several documentation files to support development and testing:
 - Addresses #XX: Enable offline functionality for field inspections
 
 ## Screenshots
-![Mobile pre-install](image.png)
 
