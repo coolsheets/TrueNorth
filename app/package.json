@@ -5,6 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:https": "vite",
+    "dev:mobile": "vite --host",
+    "dev:mobile:https": "vite --host",
+    "dev:localhost": "vite",
+    "dev:app:host": "vite --host",
+    "dev:app:secure": "cd app && vite --host --https",
+    "gen-certs": "../scripts/generate-certs.sh",
+    "setup-pwa": "npm run gen-certs && npm run dev:https",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"
@@ -15,6 +23,7 @@
     "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.1",
     "dexie": "^4.0.9",
+    "esbuild": "^0.25.9",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -24,10 +33,14 @@
     "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.3",
-    "@vitejs/plugin-react": "^4.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "sharp": "^0.34.3",
     "typescript": "^5.5.4",
-    "vite": "^5.4.2",
+    "vite": "^5.4.19",
     "vite-plugin-pwa": "^0.20.0",
     "vitest": "^2.0.5"
+  },
+  "overrides": {
+    "esbuild": "^0.25.9"
   }
 }

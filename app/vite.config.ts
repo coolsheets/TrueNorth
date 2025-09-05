@@ -1,13 +1,41 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
+import path from 'path';
+
+// Custom plugin to ensure service worker files get the correct MIME type
+function serviceWorkerContentTypePlugin(): Plugin {
+  return {
+    name: 'configure-service-worker-content-type',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        // Check if the request is for a service worker file
+        if (req.url?.endsWith('.js') && (req.url?.includes('/sw.js') || req.url?.includes('/service-worker.js') || req.url?.includes('/registerSW.js'))) {
+          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+          res.setHeader('Service-Worker-Allowed', '/');
+        }
+        next();
+      });
+    }
+  };
+};
 
 export default defineConfig({
   plugins: [
     react(),
+    serviceWorkerContentTypePlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // Change to manual registration
       includeAssets: ['icons/*'],
+      injectRegister: 'script', // Change to script to avoid auto registration issues
+      strategies: 'generateSW',
+      filename: 'sw.js', // Explicitly set the service worker filename
+      devOptions: {
+        enabled: true,
+        type: 'module',
+        navigateFallback: 'index.html'
+      },
       manifest: {
         name: 'PPI Canada',
         short_name: 'PPI',
@@ -16,11 +44,12 @@ export default defineConfig({
         background_color: '#0b1220',
         theme_color: '#0ea5e9',
         icons: [
-          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           { urlPattern: /\/api\//, handler: 'NetworkFirst', options: { cacheName: 'api' } }
@@ -28,5 +57,16 @@ export default defineConfig({
       }
     })
   ],
-  server: { port: 5173 }
+  server: { 
+    port: 5173,
+    ...(process.env.HTTPS === 'true'
+      ? {
+          https: {
+            key: fs.readFileSync(path.resolve(__dirname, 'key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname, 'cert.pem')),
+          },
+          host: true, // This enables listening on all network interfaces
+        }
+      : {})
+  }
 });

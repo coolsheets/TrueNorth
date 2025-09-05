@@ -2,6 +2,7 @@
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Box, Container, Link, Stack } from "@mui/material";
 import OfflineBadge from "./components/OfflineBadge";
+import InstallPWA from "./components/InstallPWA";
 import Routes from "./routes";
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
             >
               Export
             </Link>
+            <InstallPWA />
           </Stack>
         </Toolbar>
       </AppBar>
