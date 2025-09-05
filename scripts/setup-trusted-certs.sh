@@ -18,9 +18,30 @@ if command -v mkcert &> /dev/null; then
     echo -e "${GREEN}mkcert is already installed.${NC}"
 else
     echo -e "${YELLOW}Installing mkcert...${NC}"
-    sudo apt update
-    sudo apt install -y mkcert
-    
+    # Detect OS
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS_ID=$ID
+    else
+        OS_ID="unknown"
+    fi
+
+    if [[ "$OS_ID" == "ubuntu" || "$OS_ID" == "debian" ]]; then
+        echo -e "${YELLOW}This will run 'sudo apt update' and 'sudo apt install -y mkcert'.${NC}"
+        read -p "Do you want to continue? [y/N] " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            sudo apt update
+            sudo apt install -y mkcert
+        else
+            echo -e "${RED}Aborted by user. Please install mkcert manually.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}Automatic installation is only supported on Debian/Ubuntu systems.${NC}"
+        echo -e "${YELLOW}Please install mkcert manually:${NC}"
+        echo -e "https://github.com/FiloSottile/mkcert"
+        exit 1
+    fi
     if ! command -v mkcert &> /dev/null; then
         echo -e "${RED}Failed to install mkcert. Please install it manually:${NC}"
         echo -e "https://github.com/FiloSottile/mkcert"
