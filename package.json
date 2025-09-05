@@ -29,9 +29,9 @@
 		"dev": "concurrently \"npm:dev:server\" \"npm:dev:app\"",
 		"dev:app": "npm --prefix app run dev",
 		"dev:server": "npm --prefix server run dev",
-		"// IMPORTANT: The next two scripts are critical for mobile/PWA testing": "",
-		"dev:mobile": "concurrently \"npm:dev:server\" \"npm:dev:app:host\"",
-		"dev:app:host": "npm --prefix app run dev -- --host",
+		"dev:app:secure": "cd app && HTTPS=true vite --host",
+		"dev:server:secure": "cd server && ts-node-dev --respawn src/index.ts",
+		"dev:mobile": "node scripts/start-secure.js",
 		"validate:package": "node ./scripts/validate-package.js",
 		"validate:vin-search": "node ./scripts/validate-vin-search.js",
 		"validate": "npm run validate:package && npm run validate:vin-search",
@@ -39,7 +39,8 @@
 		"preview": "npm --prefix app run preview",
 		"lint": "eslint \"{app,server}/**/*.{ts,tsx,js}\"",
 		"test": "npm --prefix app run test",
-		"e2e": "playwright test"
+		"e2e": "playwright test",
+		"install:deps": "npm install concurrently --save-dev"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.30",

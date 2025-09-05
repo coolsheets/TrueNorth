@@ -9,6 +9,8 @@
     "dev:mobile": "vite --host",
     "dev:mobile:https": "vite --host",
     "dev:localhost": "vite",
+    "dev:app:host": "vite --host",
+    "dev:app:secure": "cd app && vite --host --https",
     "gen-certs": "../scripts/generate-certs.sh",
     "setup-pwa": "npm run gen-certs && npm run dev:https",
     "build": "vite build",

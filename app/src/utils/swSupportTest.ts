@@ -1,6 +1,39 @@
 // Simple test file to check service worker support
 // This will display a detailed diagnostic message about service worker support
 
+const isLocalhostOrPrivateIP = (hostname: string): boolean => {
+  // Check for named localhost
+  if (hostname === 'localhost') return true;
+  
+  // Check for IPv4 localhost
+  if (hostname === '127.0.0.1') return true;
+  
+  // Check for IPv6 localhost
+  if (hostname === '::1') return true;
+  
+  // Check for IPv4 private ranges using proper pattern matching
+  const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const match = hostname.match(ipv4Regex);
+  
+  if (match) {
+    const octets = match.slice(1, 5).map(Number);
+    
+    // Validate each octet is between 0-255
+    if (octets.some(octet => octet < 0 || octet > 255)) return false;
+    
+    // 10.0.0.0/8 Private range
+    if (octets[0] === 10) return true;
+    
+    // 172.16.0.0/12 Private range
+    if (octets[0] === 172 && (octets[1] >= 16 && octets[1] <= 31)) return true;
+    
+    // 192.168.0.0/16 Private range
+    if (octets[0] === 192 && octets[1] === 168) return true;
+  }
+  
+  return false;
+};
+
 const swSupportTest = () => {
   const results = {
     hasNavigator: typeof navigator !== 'undefined',
@@ -11,10 +44,7 @@ const swSupportTest = () => {
     location: window.location.href,
     protocol: window.location.protocol,
     host: window.location.host,
-    isLocalhost: window.location.hostname === 'localhost' || 
-                 window.location.hostname === '127.0.0.1' ||
-                 window.location.hostname.startsWith('192.168.') ||
-                 window.location.hostname.startsWith('10.0.'),
+    isLocalhost: isLocalhostOrPrivateIP(window.location.hostname),
     isSecureContext: window.isSecureContext,
     userAgent: navigator.userAgent
   };

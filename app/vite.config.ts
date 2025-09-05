@@ -2,6 +2,7 @@ import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
+import path from 'path';
 
 // Custom plugin to ensure service worker files get the correct MIME type
 function serviceWorkerContentTypePlugin(): Plugin {
@@ -59,22 +60,13 @@ export default defineConfig({
   server: { 
     port: 5173,
     ...(process.env.HTTPS === 'true'
-      ? (() => {
-          const keyPath = './key.pem';
-          const certPath = './cert.pem';
-          if (!fs.existsSync(keyPath)) {
-            throw new Error(`HTTPS key file not found: ${keyPath}`);
-          }
-          if (!fs.existsSync(certPath)) {
-            throw new Error(`HTTPS certificate file not found: ${certPath}`);
-          }
-          return {
-            https: {
-              key: fs.readFileSync(keyPath),
-              cert: fs.readFileSync(certPath),
-            }
-          };
-        })()
+      ? {
+          https: {
+            key: fs.readFileSync(path.resolve(__dirname, 'key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname, 'cert.pem')),
+          },
+          host: true, // This enables listening on all network interfaces
+        }
       : {})
   }
 });
