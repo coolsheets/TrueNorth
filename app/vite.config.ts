@@ -58,19 +58,23 @@ export default defineConfig({
   ],
   server: { 
     port: 5173,
-    https: (() => {
-      const keyPath = './key.pem';
-      const certPath = './cert.pem';
-      if (!fs.existsSync(keyPath)) {
-        throw new Error(`HTTPS key file not found: ${keyPath}`);
-      }
-      if (!fs.existsSync(certPath)) {
-        throw new Error(`HTTPS certificate file not found: ${certPath}`);
-      }
-      return {
-        key: fs.readFileSync(keyPath),
-        cert: fs.readFileSync(certPath),
-      };
-    })()
+    ...(process.env.HTTPS === 'true'
+      ? (() => {
+          const keyPath = './key.pem';
+          const certPath = './cert.pem';
+          if (!fs.existsSync(keyPath)) {
+            throw new Error(`HTTPS key file not found: ${keyPath}`);
+          }
+          if (!fs.existsSync(certPath)) {
+            throw new Error(`HTTPS certificate file not found: ${certPath}`);
+          }
+          return {
+            https: {
+              key: fs.readFileSync(keyPath),
+              cert: fs.readFileSync(certPath),
+            }
+          };
+        })()
+      : {})
   }
 });
