@@ -1,6 +1,6 @@
-const { Router } = require('express');
+import { Router, Request, Response } from 'express';
 const router = Router();
 
-router.get('/', (_, res) => res.json({ ok: true, ts: new Date().toISOString() }));
+router.get('/', (_: Request, res: Response) => res.json({ ok: true, ts: new Date().toISOString() }));
 
-module.exports = router;
+export default router;

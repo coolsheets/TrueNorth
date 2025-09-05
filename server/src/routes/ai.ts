@@ -1,16 +1,15 @@
-const { Router } = require('express');
-const { env } = require('../env');
+import { Router, Request, Response } from 'express';
+import { env } from '../env.js';
 
 /**
  * Express router for AI-related endpoints
- * @type {import('express').Router}
  */
 const r = Router();
 
 /**
  * Summarize inspection data
  */
-r.post('/summarize', async (req, res) => {
+r.post('/summarize', async (req: Request, res: Response) => {
 const { vehicle, sections } = req.body;
 const openai = await import('openai');
 const client = new openai.default({ apiKey: env.openaiKey });
@@ -36,7 +35,7 @@ res.json(JSON.parse(out));
 /**
  * Generate an offer letter based on inspection findings
  */
-r.post('/offer-letter', async (req, res) => {
+r.post('/offer-letter', async (req: Request, res: Response) => {
 const { vehicle, priceAsk, findings } = req.body;
 const openai = await import('openai');
 const client = new openai.default({ apiKey: env.openaiKey });
@@ -58,4 +57,4 @@ res.json({ email: resp.choices[0]?.message?.content || '' });
 });
 
 
-module.exports = r;
+export default r;

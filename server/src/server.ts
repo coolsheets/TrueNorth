@@ -1,6 +1,6 @@
-const { connect } = require('mongoose');
-const app = require('./app');
-const { env } = require('./env');
+import { connect } from 'mongoose';
+import app from './app.js';
+import { env } from './env.js';
 
 
 async function main() {
