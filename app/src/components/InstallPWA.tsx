@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Tooltip, CircularProgress, Typography, Box } from '@mui/material';
+import { Button, Tooltip, CircularProgress, Typography, Box, Snackbar, Alert } from '@mui/material';
 import { showInstallPrompt } from '../registerSW';
 import { canInstallPWA, manualShowInstallPrompt, checkInstallationStatus } from '../utils/pwaInstall';
 import { getSslRecommendations } from '../utils/sslDiagnostic';
@@ -12,6 +12,8 @@ const InstallPWA: React.FC = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [installReason, setInstallReason] = useState('');
   const [sslRecommendations, setSslRecommendations] = useState<any>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     // Check installation status
@@ -91,8 +93,9 @@ const InstallPWA: React.FC = () => {
             // Manual method failed too, that's okay
             console.log('Manual installation prompt failed, user may have declined', error);
             
-            // Show a more user-friendly message
-            alert('Installation not available. Your browser may already have this app installed, or your browser may not support PWA installation.\n\nTry using Chrome, Edge, or Safari.');
+            // Show a more user-friendly message with Snackbar instead of alert
+            setSnackbarMessage('Installation not available. Your browser may already have this app installed, or your browser may not support PWA installation. Try using Chrome, Edge, or Safari.');
+            setSnackbarOpen(true);
           }
         }, 500);
       } else {
@@ -102,13 +105,15 @@ const InstallPWA: React.FC = () => {
         } catch (error) {
           console.error('Installation error:', error);
           
-          // Show a helpful error message that doesn't expose technical details
-          alert('This app cannot be installed right now. Please make sure you\'re using a supported browser and that you\'re not already in PWA mode.');
+          // Show a helpful error message using Snackbar
+          setSnackbarMessage('This app cannot be installed right now. Please make sure you\'re using a supported browser and that you\'re not already in PWA mode.');
+          setSnackbarOpen(true);
         }
       }
     } catch (error) {
       console.error('Installation error:', error);
-      alert(`Installation is currently unavailable. Please try again later.`);
+      setSnackbarMessage('Installation is currently unavailable. Please try again later.');
+      setSnackbarOpen(true);
     }
   };
 
@@ -187,15 +192,37 @@ const InstallPWA: React.FC = () => {
     );
   }
 
+  // Handle closing the snackbar
+  const handleSnackbarClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
   return (
-    <Button 
-      variant="contained" 
-      color="primary"
-      onClick={handleInstall}
-      startIcon={<span role="img" aria-label="download">⬇️</span>}
-    >
-      Install App
-    </Button>
+    <>
+      <Button 
+        variant="contained" 
+        color="primary"
+        onClick={handleInstall}
+        startIcon={<span role="img" aria-label="download">⬇️</span>}
+      >
+        Install App
+      </Button>
+      
+      {/* Snackbar for user notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity="info" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
