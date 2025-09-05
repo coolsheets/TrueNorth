@@ -124,7 +124,7 @@ export default function Tires() {
   function handleItemStateChange(itemId: string, newState: string) {
     setSectionItems(items => 
       items.map(item => 
-        item.id === itemId ? { ...item, state: newState } : item
+        item.id === itemId ? { ...item, status: newState as 'ok'|'warn'|'fail'|'na' } : item
       )
     );
   }
