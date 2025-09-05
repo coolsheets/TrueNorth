@@ -317,7 +317,7 @@ const PWAStatus: React.FC = () => {
                 <Button 
                   variant="outlined" 
                   size="small"
-                  onClick={() => window.open('/docs/SSL_CERTIFICATE_ISSUES.md', '_blank')}
+                  onClick={() => window.open('/docs/ssl-certificate-issues', '_blank')}
                 >
                   View Detailed SSL Documentation
                 </Button>
