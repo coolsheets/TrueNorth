@@ -5,7 +5,7 @@
  * might not be registering properly due to SSL certificate issues.
  */
 
-export function diagnoseSslIssues() {
+export async function diagnoseSslIssues() {
   const results = {
     isHttps: window.location.protocol === 'https:',
     isLocalhost: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
@@ -29,14 +29,13 @@ export function diagnoseSslIssues() {
   if (canRegisterServiceWorker) {
     results.hasRegistrationAttempted = true;
     // Attempt to register a test service worker
-    navigator.serviceWorker.getRegistration()
-      .then(registration => {
-        results.serviceWorkerRegistered = !!registration;
-        console.log('Service worker registration result:', registration);
-      })
-      .catch(error => {
-        console.error('Service worker registration error:', error);
-      });
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      results.serviceWorkerRegistered = !!registration;
+      console.log('Service worker registration result:', registration);
+    } catch (error) {
+      console.error('Service worker registration error:', error);
+    }
   }
 
   // Detailed diagnostics
@@ -99,8 +98,8 @@ export function diagnoseSslIssues() {
 /**
  * Returns readable recommendations for fixing service worker SSL issues
  */
-export function getSslRecommendations() {
-  const { results, diagnostics, canUseServiceWorker } = diagnoseSslIssues();
+export async function getSslRecommendations() {
+  const { results, diagnostics, canUseServiceWorker } = await diagnoseSslIssues();
   
   const recommendations = [];
   

@@ -38,13 +38,20 @@ const PWAStatus: React.FC = () => {
     const status = logPwaInstallationStatus();
     setInstallCriteria(status);
     
-    // Run SSL diagnostics
-    const sslIssues = diagnoseSslIssues();
-    setSslDiagnostics(sslIssues);
+    // Run SSL diagnostics and get recommendations
+    const runSslChecks = async () => {
+      try {
+        const sslIssues = await diagnoseSslIssues();
+        setSslDiagnostics(sslIssues);
+        
+        const recommendations = await getSslRecommendations();
+        setSslRecommendations(recommendations);
+      } catch (error) {
+        console.error('Error running SSL diagnostics:', error);
+      }
+    };
     
-    // Get SSL recommendations
-    const recommendations = getSslRecommendations();
-    setSslRecommendations(recommendations);
+    runSslChecks();
     
     // Check if we can install the PWA
     checkCanInstall();

@@ -34,8 +34,12 @@ const InstallPWA: React.FC = () => {
         
         // Get SSL recommendations if there are issues
         if (!installCheck.canInstall) {
-          const recommendations = getSslRecommendations();
-          setSslRecommendations(recommendations);
+          try {
+            const recommendations = await getSslRecommendations();
+            setSslRecommendations(recommendations);
+          } catch (error) {
+            console.error('Error getting SSL recommendations:', error);
+          }
         }
       } catch (error) {
         console.error('Error checking install capability:', error);
