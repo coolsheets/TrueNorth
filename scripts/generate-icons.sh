@@ -96,6 +96,10 @@ EOL
 
 # Make sure there's an image to convert
 if [ ! -f "app/maple-leaf.png" ]; then
+  if [ ! -f "app/maple-leaf-base64.txt" ]; then
+    echo "Error: app/maple-leaf-base64.txt not found. Cannot create app/maple-leaf.png." >&2
+    exit 1
+  fi
   echo "Creating image from base64..."
   base64 -d <<< $(cat app/maple-leaf-base64.txt | sed 's/^data:image\/png;base64,//') > app/maple-leaf.png
 fi
