@@ -31,18 +31,24 @@ npm run preview
 
 ## Live Demo
 
-Scan the QR code below to test on your mobile device:
-
-![QR Code for PWA](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://coolsheets.github.io/TrueNorth/)
-## Live Demo
-
 The PWA is deployed and available at: [https://coolsheets.github.io/TrueNorth/](https://coolsheets.github.io/TrueNorth/)
 
-Last deployment: 2025-09-08 20:52:47
+Last deployment: 2025-09-08
 
 ### Mobile Testing
 
 Scan the QR code below to test on your mobile device:
 
 ![QR Code for PWA](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://coolsheets.github.io/TrueNorth/)
+
+### Deployment Notes
+
+This PWA is deployed using GitHub Pages from the `gh-pages-manual` branch. The deployment includes:
+
+- Full offline functionality
+- Service worker for caching assets
+- IndexedDB for data persistence
+- Installable PWA capability
+
+For deployment instructions, see [PWA_DEPLOYMENT_TESTING.md](docs/PWA_DEPLOYMENT_TESTING.md).
 
