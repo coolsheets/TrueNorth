@@ -28,3 +28,15 @@ npm run test
 npm run build
 npm run preview
 ```
+
+## Live Demo
+
+The PWA is deployed and available at: [https://coolsheets.github.io/TrueNorth/](https://coolsheets.github.io/TrueNorth/)
+
+Last deployment: 2025-09-08 (Manual update)
+
+### Mobile Testing
+
+Scan the QR code below to test on your mobile device:
+
+![QR Code for PWA](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://coolsheets.github.io/TrueNorth/)

@@ -39,8 +39,59 @@ jobs:
       - name: Build
         run: npm --prefix app run build
         
+      - name: Generate QR Code
+        run: |
+          npm install -g qrcode-terminal
+          echo "::set-output name=qr_code_image::$(qrcode-terminal https://coolsheets.github.io/TrueNorth/ -o url)"
+        id: qrcode
+        
+      - name: Update README with Deployment Info
+        run: |
+          DEPLOY_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+          QR_CODE_URL="${{ steps.qrcode.outputs.qr_code_image }}"
+          
+          # Create the new content to append
+          cat << EOF > deployment_info.md
+          
+          ## Live Demo
+          
+          The PWA is deployed and available at: [https://coolsheets.github.io/TrueNorth/](https://coolsheets.github.io/TrueNorth/)
+          
+          Last deployment: $DEPLOY_DATE
+          
+          ### Mobile Testing
+          
+          Scan the QR code below to test on your mobile device:
+          
+          ![QR Code for PWA](https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://coolsheets.github.io/TrueNorth/)
+          
+          EOF
+          
+          # Check if the Live Demo section already exists
+          if grep -q "## Live Demo" README.md; then
+            # Replace existing section
+            sed -i '/^## Live Demo/,/^##/{ /^##[^#]/! d; }' README.md
+            cat deployment_info.md >> README.md
+          else
+            # Append new section after the quick start section
+            sed -i '/^## 0) Quick Start/,/^```$/{ /^```$/s/$/\n/; }' README.md
+            cat deployment_info.md >> README.md
+          fi
+          
+          # Commit README changes
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          git commit -m "Update README with latest deployment info [skip ci]" || echo "No changes to commit"
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./app/dist
+      
+      - name: Push README changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
