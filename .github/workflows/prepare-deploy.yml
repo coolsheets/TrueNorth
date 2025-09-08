@@ -1,0 +1,62 @@
+name: Prepare PWA Deployment
+
+on:
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      confirm_deploy:
+        description: 'Confirm deployment after build validation'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: |
+          npm install
+          npm run bootstrap
+          
+      - name: Build
+        run: npm --prefix app run build
+      
+      - name: Run PWA validation tests
+        run: |
+          # Add any specific PWA validation tests here
+          echo "Running PWA validation checks..."
+          # For example, check if service worker is generated
+          if [ ! -f "./app/dist/sw.js" ]; then
+            echo "Error: Service Worker not generated!"
+            exit 1
+          fi
+          echo "PWA validation passed!"
+          
+      - name: Upload build artifacts for review
+        uses: actions/upload-artifact@v3
+        with:
+          name: pwa-build
+          path: app/dist
+          retention-days: 2
+      
+      - name: Deployment Instructions
+        if: ${{ github.event.inputs.confirm_deploy == 'true' }}
+        run: |
+          echo "Build validation completed successfully."
+          echo ""
+          echo "To deploy this build to GitHub Pages:"
+          echo ""
+          echo "1. Download the build artifacts from this workflow"
+          echo "2. Checkout the gh-pages-manual branch locally"
+          echo "3. Replace the contents with the new build"
+          echo "4. Commit and push to the gh-pages-manual branch"
+          echo ""
+          echo "For detailed instructions, refer to docs/GO_FORWARD_PROCESS.md"
