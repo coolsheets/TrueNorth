@@ -12,6 +12,12 @@ yarn.lock
 dist/
 build/
 coverage/
+**/dist/
+**/build/
+**/*.tsbuildinfo
+.next/
+.nuxt/
+.output/
 
 # Local environment
 .env
@@ -19,15 +25,30 @@ coverage/
 .env.*.local
 server/.env
 app/.env
+**/.env
+**/*.env
 
-# https cetrificates
+# Certificates and keys
 *.pem
+*.key
+*.crt
+*.cer
+*.pfx
+*.p12
+**/*.pem
+**/*.key
 
 # IDE / editor
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json.example
 .idea/
 *.swp
 *.swo
+*.sublime*
+.history
+*.vsix
 
 # OS-specific
 .DS_Store
@@ -48,3 +69,14 @@ logs/
 .cache/
 .eslintcache
 vite.config.ts.timestamp-*
+
+# Sensitive data and API keys
+**/*config.json
+**/credentials.json
+**/*secrets*
+**/*secret*
+**/*key*
+**/*token*
+**/*.jwk
+**/*.pem
+**/*.ppk
