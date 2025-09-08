@@ -7,6 +7,15 @@ on:
         description: 'Branch to deploy'
         required: true
         default: 'refactor-ES6'
+  push:
+    branches:
+      - refactor-ES6
+    paths:
+      - 'app/**'
+      - '.github/workflows/deploy-pwa.yml'
+
+permissions:
+  contents: write
 
 jobs:
   build-and-deploy:
@@ -15,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ github.event.inputs.branch || github.ref }}
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
