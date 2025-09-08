@@ -22,6 +22,8 @@ function serviceWorkerContentTypePlugin(): Plugin {
 };
 
 export default defineConfig({
+  // Base path for GitHub Pages - uncomment when deploying to GitHub Pages
+  // base: '/TrueNorth/',
   plugins: [
     react(),
     serviceWorkerContentTypePlugin(),
