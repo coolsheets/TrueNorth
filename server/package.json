@@ -2,11 +2,11 @@
   "name": "ppi-canada-server",
   "version": "0.1.0",
   "type": "module",
-  "main": "src/server.ts",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "NODE_OPTIONS=--experimental-specifier-resolution=node ts-node-dev --respawn --transpile-only --esm src/server.ts",
-    "build": "tsc",
-    "start": "node --experimental-specifier-resolution=node dist/server.js"
+    "dev": "tsc --project tsconfig.build.json --watch & node --watch dist/server.js",
+    "build": "tsc --project tsconfig.build.json",
+    "start": "node dist/server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -1,6 +1,6 @@
-import { Router, Request, Response } from 'express';
-const router = Router();
+import express from 'express';
+const router = express.Router();
 
-router.get('/', (_: Request, res: Response) => res.json({ ok: true, ts: new Date().toISOString() }));
+router.get('/', (_: express.Request, res: express.Response) => res.json({ ok: true, ts: new Date().toISOString() }));
 
 export default router;
