@@ -64,8 +64,8 @@ export default defineConfig({
     ...(process.env.HTTPS === 'true'
       ? {
           https: {
-            key: fs.readFileSync(path.resolve(__dirname, 'key.pem')),
-            cert: fs.readFileSync(path.resolve(__dirname, 'cert.pem')),
+            key: fs.readFileSync(path.resolve(__dirname, 'localhost+3-key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname, 'localhost+3.pem')),
           },
           host: true, // This enables listening on all network interfaces
         }
