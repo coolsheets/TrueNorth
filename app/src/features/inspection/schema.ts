@@ -2,6 +2,19 @@ export type Status = 'ok'|'warn'|'fail'|'na';
 export type Item = { id: string; label: string };
 export type Section = { name: string; slug: string; items: Item[] };
 
+// Define interface for inspection fields
+export interface InspectionField {
+  id: string;
+  label: string;
+  status?: Status;
+  notes?: string;
+}
+
+// Add a new type for fields that can have images
+export interface InspectionFieldWithImage extends InspectionField {
+  image?: string; // Base64 encoded image
+}
+
 export const sections: Section[] = [
   { name: 'Vehicle Basics', slug: 'vehicle', items: [
     { id: 'vin', label: 'VIN verified matches docs' },

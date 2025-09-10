@@ -1,4 +1,5 @@
 // Utility for checking online/offline status and providing feedback
+import { useState, useEffect } from 'react';
 
 let isOnline = navigator.onLine;
 
@@ -12,6 +13,26 @@ export function isServiceWorkerActive(): boolean {
 // Function to check online status
 export function checkOnlineStatus(): boolean {
   return isOnline;
+}
+
+// React hook for online/offline status
+export function useOfflineStatus(): boolean {
+  const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOffline;
 }
 
 // Set up event listeners to update online status
