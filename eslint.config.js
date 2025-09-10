@@ -10,6 +10,7 @@ export default [
       '**/build/**',
       '.eslintrc.cjs',
       'app/dev-dist/**', // Ignore service worker files completely since they're generated
+      'scripts/start-secure.cjs', // Ignore CommonJS script file
       // Add any other patterns that were in your .eslintignore file
     ]
   },

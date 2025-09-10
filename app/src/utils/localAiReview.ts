@@ -1,5 +1,5 @@
 import { Status } from '../features/inspection/schema';
-import { CRITICAL_SYSTEMS, REPAIR_COSTS, RepairCostEntry } from './constants';
+import { CRITICAL_SYSTEMS, REPAIR_COSTS } from './constants';
 
 interface Vehicle {
   make: string;
