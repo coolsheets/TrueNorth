@@ -9,7 +9,9 @@ import {
   ListItem, 
   ListItemText, 
   Divider,
-  CircularProgress
+  CircularProgress,
+  Alert,
+  AlertTitle
 } from "@mui/material";
 import Card from "../../../components/Card";
 import PWAStatus from "../../../components/PWAStatus";
@@ -81,6 +83,13 @@ export default function Start() {
         <Typography color="text.secondary" paragraph sx={{ mb: 3 }}>
           Create a new buyer-focused inspection. Works offline and syncs later. Exports a professional PDF for negotiation.
         </Typography>
+        
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <AlertTitle>New Feature: Offline AI Review</AlertTitle>
+          You can now get a basic AI inspection review even when offline! Complete the inspection
+          and visit the Review page to see a summary of findings and recommendations.
+        </Alert>
+        
         <Button 
           variant="contained" 
           onClick={newDraft} 

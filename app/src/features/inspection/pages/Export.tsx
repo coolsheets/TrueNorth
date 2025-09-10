@@ -68,7 +68,8 @@ export default function Export() {
       let summary = null;
       if (includeSummary) {
         try {
-          const response = await fetch('/api/ai/summarize', {
+          const apiBase = import.meta.env.VITE_API_BASE || '';
+          const response = await fetch(`${apiBase}/api/ai/summarize`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -124,35 +125,35 @@ export default function Export() {
       
       // Save the inspection to the server if it's connected
       try {
-        const response = await fetch('/api/inspections', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            vehicle: draft.vehicle,
-            sections: draft.sections,
-            createdAt: new Date().toISOString(),
-          }),
-        });
-        
-        if (response.ok) {
-          console.log("Inspection saved to server");
-          // Mark as completed and synced in local database
-          await db.drafts.update(draftId, {
-            ...draft,
-            completed: true,
-            completedAt: new Date().toISOString(),
-            synced: true,
-            syncedAt: new Date().toISOString()
+        const apiBase = import.meta.env.VITE_API_BASE || '';
+        const response = await fetch(`${apiBase}/api/inspections`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              vehicle: draft.vehicle,
+              sections: draft.sections,
+              createdAt: new Date().toISOString(),
+            }),
           });
+          
+          if (response.ok) {
+            console.log("Inspection saved to server");
+            // Mark as completed and synced in local database
+            await db.drafts.update(draftId, {
+              ...draft,
+              completed: true,
+              completedAt: new Date().toISOString(),
+              synced: true,
+              syncedAt: new Date().toISOString()
+            });
+          }
+        } catch (error) {
+          console.error("Error saving to server", error);
+          // Continue even if server save fails
         }
-      } catch (error) {
-        console.error("Error saving to server", error);
-        // Continue even if server save fails
-      }
-      
-    } catch (err) {
+      } catch (err) {
       console.error("Error generating PDF", err);
       setError("Failed to generate PDF report");
     } finally {
