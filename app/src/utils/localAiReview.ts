@@ -1,4 +1,5 @@
 import { Status } from '../features/inspection/schema';
+import { CRITICAL_SYSTEMS, REPAIR_COSTS, RepairCostEntry } from './constants';
 
 interface Vehicle {
   make: string;
@@ -57,19 +58,6 @@ export const generateLocalAiReview = (
   let warnCount = 0;
   let okCount = 0;
 
-  // Track specific issues
-  const criticalSystems = ['brakes', 'startup', 'drive', 'frame', 'leaks'];
-  const expensiveRepairs: { [key: string]: { cost: number; label: string; } } = {
-    'frame': { cost: 3000, label: 'Frame rust repairs' },
-    'cab': { cost: 2500, label: 'Body rust repairs' },
-    'panels': { cost: 1500, label: 'Body panel repairs' },
-    'glass': { cost: 800, label: 'Windshield replacement' },
-    'tires-condition': { cost: 1200, label: 'Tire replacement' },
-    'leaks': { cost: 1000, label: 'Fluid leak repairs' },
-    'belts': { cost: 400, label: 'Belt/hose replacement' },
-    'hvac': { cost: 1200, label: 'HVAC system repairs' }
-  };
-
   // Analyze each section and item
   sections.forEach(section => {
     section.items.forEach(item => {
@@ -83,15 +71,15 @@ export const generateLocalAiReview = (
         result.redFlags.push(flagText);
         
         // Add repair cost estimate for known expensive items
-        if (expensiveRepairs[item.id]) {
-          result.estRepairTotalCAD += expensiveRepairs[item.id].cost;
+        if (REPAIR_COSTS[item.id]) {
+          result.estRepairTotalCAD += REPAIR_COSTS[item.id].cost;
           result.suggestedAdjustments.push(
-            `${expensiveRepairs[item.id].label}: -$${expensiveRepairs[item.id].cost}`
+            `${REPAIR_COSTS[item.id].label}: -$${REPAIR_COSTS[item.id].cost}`
           );
         }
         
         // Critical system failures should be highlighted
-        if (criticalSystems.includes(item.id)) {
+        if (CRITICAL_SYSTEMS.includes(item.id)) {
           result.suggestedAdjustments.push(
             `Consider if ${item.label?.toLowerCase() || item.id} issue is worth repairing`
           );
@@ -101,11 +89,11 @@ export const generateLocalAiReview = (
         result.yellowFlags.push(`${section.name}: ${item.label || item.id}${item.notes ? ` - ${item.notes}` : ''}`);
         
         // Add partial cost for warnings on expensive items
-        if (expensiveRepairs[item.id]) {
-          const warningCost = Math.round(expensiveRepairs[item.id].cost * 0.4);
+        if (REPAIR_COSTS[item.id]) {
+          const warningCost = Math.round(REPAIR_COSTS[item.id].cost * 0.4);
           result.estRepairTotalCAD += warningCost;
           result.suggestedAdjustments.push(
-            `${expensiveRepairs[item.id].label} (minor): -$${warningCost}`
+            `${REPAIR_COSTS[item.id].label} (minor): -$${warningCost}`
           );
         }
       } else if (item.status === 'ok') {

@@ -9,13 +9,14 @@ if ('serviceWorker' in navigator) {
       // In production, it's in /sw.js
       // For preview mode, also use dev-dist path
       const baseUrl = import.meta.env.BASE_URL || '/';
-      const swPath = import.meta.env.DEV 
-        ? `${baseUrl}dev-dist/sw.js`.replace('//', '/') 
-        : `${baseUrl}sw.js`.replace('//', '/');
-      console.log(`Attempting to register service worker from: ${swPath}`);
+      const swUrl = new URL(
+        import.meta.env.DEV ? 'dev-dist/sw.js' : 'sw.js', 
+        new URL(baseUrl, window.location.origin)
+      );
+      console.log(`Attempting to register service worker from: ${swUrl.pathname}`);
       
       // Register the service worker
-      const registration = await navigator.serviceWorker.register(swPath, {
+      const registration = await navigator.serviceWorker.register(swUrl.pathname, {
         type: 'module',
         scope: import.meta.env.BASE_URL || '/'
       });

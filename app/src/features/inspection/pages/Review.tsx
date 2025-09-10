@@ -22,7 +22,7 @@ import { generateLocalAiReview } from "../../../utils/localAiReview";
 import { useOfflineStatus } from "../../../utils/offlineStatus";
 
 // Helper function to get status color
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string): "success" | "warning" | "error" | "default" => {
   switch(status) {
     case 'ok': return 'success';
     case 'warn': return 'warning';
@@ -282,7 +282,7 @@ export default function Review() {
                                 <Chip 
                                   label={getStatusText(itemState.status)}
                                   size="small"
-                                  color={getStatusColor(itemState.status) as "success" | "warning" | "error" | "default"}
+                                  color={getStatusColor(itemState.status)}
                                   sx={{ ml: 1 }}
                                 />
                               </Box>

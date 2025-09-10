@@ -9,13 +9,15 @@ interface PhotoCaptureProps {
   existingImage?: string;
   label?: string;
   fieldId?: string;
+  imageQuality?: number; // Quality factor for JPEG compression (0.0 to 1.0)
 }
 
 const PhotoCapture: React.FC<PhotoCaptureProps> = ({ 
   onImageCapture, 
   existingImage, 
   label = "Take Photo",
-  fieldId
+  fieldId,
+  imageQuality = 0.8 // Default to 80% quality
 }) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(existingImage || null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -60,13 +62,13 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/jpeg', 0.8); // 80% quality to reduce size
+        const imageData = canvas.toDataURL('image/jpeg', imageQuality); // Use configurable quality
         setCapturedImage(imageData);
         onImageCapture(imageData);
         stopCamera();
       }
     }
-  }, [onImageCapture, stopCamera]);
+  }, [onImageCapture, stopCamera, imageQuality]);
 
   const handleDeleteImage = useCallback(() => {
     setCapturedImage(null);
@@ -74,7 +76,8 @@ const PhotoCapture: React.FC<PhotoCaptureProps> = ({
   }, [onImageCapture]);
 
   const handleOpenCamera = useCallback(() => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // Check if mediaDevices API is available
+    if ('mediaDevices' in navigator) {
       startCamera();
     } else {
       // Fallback for browsers that don't support getUserMedia
