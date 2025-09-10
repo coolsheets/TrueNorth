@@ -18,6 +18,7 @@ coverage/
 .next/
 .nuxt/
 .output/
+app/dev-dist/
 
 # Local environment
 .env
