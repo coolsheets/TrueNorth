@@ -1,0 +1,54 @@
+name: Deploy PWA to GitHub Pages
+
+on:
+  push:
+    branches: [feature/service-worker-updates]
+    paths:
+      - 'app/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: |
+          # Install root dependencies first
+          npm ci
+          # Install app dependencies
+          cd app
+          npm ci
+          # Install server dependencies
+          cd ../server
+          npm ci
+          
+      - name: Build PWA
+        working-directory: ./app
+        run: npm run build
+          
+      - name: Prepare for GitHub Pages
+        working-directory: ./app/dist
+        run: |
+          ls -la
+          touch .nojekyll
+          cp index.html 404.html
+      
+      - name: List build output files
+        run: find app/dist -type f | sort
+        
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./app/dist
+          publish_branch: gh-pages
+          full_commit_message: "Deploy PWA to GitHub Pages [skip ci]"

@@ -21,27 +21,42 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: './app/package-lock.json'
           
       - name: Install dependencies
         run: |
+          # First install root dependencies
+          npm ci
+          # Then install app-specific dependencies
           cd app
+          npm ci
+          # Also install server dependencies
+          cd ../server
           npm ci
           
       - name: Build
-        run: |
-          cd app
-          npm run build
+        working-directory: ./app
+        run: npm run build
           
       - name: Configure for GitHub Pages
+        working-directory: ./app/dist
         run: |
-          cd app/dist
           # Create a .nojekyll file to prevent Jekyll processing
           touch .nojekyll
           # Create a CNAME file if you have a custom domain
           # echo "yourdomain.com" > CNAME
           # Create a custom 404 page that redirects to index.html for SPA routing
           cp index.html 404.html
+
+      - name: Verify build output
+        run: |
+          echo "Checking if dist directory exists..."
+          if [ -d "app/dist" ]; then
+            echo "✅ app/dist directory exists"
+            ls -la app/dist
+          else
+            echo "❌ app/dist directory does not exist"
+            exit 1
+          fi
           
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -49,3 +64,5 @@ jobs:
           branch: gh-pages
           folder: app/dist
           clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use the automatic token
+          commit-message: "Deploy to GitHub Pages [skip ci]"

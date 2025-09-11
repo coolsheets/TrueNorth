@@ -64,7 +64,7 @@ function serviceWorkerContentTypePlugin(): Plugin {
 
 export default defineConfig({
   // Determine the base path based on environment
-  base: process.env.GITHUB_ACTIONS ? '/TrueNorth/' : '/', // Use repo name for GitHub Pages
+  base: process.env.GITHUB_ACTIONS ? '/TrueNorth/' : '/', // Use repo name for GitHub Pages deployment
   plugins: [
     react(),
     serviceWorkerContentTypePlugin(),

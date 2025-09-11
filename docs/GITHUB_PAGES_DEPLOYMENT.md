@@ -4,13 +4,18 @@ This guide explains how to deploy the TrueNorth PWA to GitHub Pages.
 
 ## Automatic Deployment
 
-We've set up GitHub Actions to automatically deploy the app when changes are pushed to the following branches:
+We've set up GitHub Actions to automatically deploy the app to GitHub Pages using two different workflows:
 
-- `main`
-- `master`
-- `feature/service-worker-updates`
+1. `deploy-gh-pages.yml` - Deploys changes from main branches:
+   - `main`
+   - `master`
+   - `feature/service-worker-updates`
 
-You can also manually trigger the workflow from the Actions tab in the GitHub repository.
+2. `deploy-pwa.yml` - Specifically for PWA deployment, triggered on:
+   - Changes to files in the `app/` directory
+   - Manual triggers
+
+You can manually trigger either workflow from the Actions tab in the GitHub repository.
 
 ## How the Deployment Works
 
@@ -39,20 +44,27 @@ Once deployed, the app will be available at:
 
 If you need to deploy manually:
 
-1. Build the app:
+1. Install all dependencies first:
    ```bash
-   cd app
+   # From the root directory
+   npm run install:all
+   # Or use the setup script
+   npm run setup
+   ```
+
+2. Build the app:
+   ```bash
    npm run build
    ```
 
-2. Add GitHub Pages specific files:
+3. Add GitHub Pages specific files:
    ```bash
-   cd dist
+   cd app/dist
    touch .nojekyll
    cp index.html 404.html
    ```
 
-3. Deploy the `dist` folder to the `gh-pages` branch.
+4. Deploy the `dist` folder to the `gh-pages` branch.
 
 ## Troubleshooting
 
@@ -65,6 +77,11 @@ If you encounter issues with the GitHub Pages deployment:
 3. **API Connectivity**: The app is configured to use local fallbacks when APIs are unavailable.
 
 4. **Routing Problems**: If routes don't work, verify the `basename` setting in `BrowserRouter`.
+
+5. **GitHub Actions Failures**:
+   - Check if the build output is correctly generated in the app/dist directory
+   - Verify that all necessary files are included in the deployment
+   - Consider using the simplified `deploy-pwa.yml` workflow for PWA-specific changes
 
 ## Testing the PWA Features
 
