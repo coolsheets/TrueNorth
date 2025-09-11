@@ -1,0 +1,51 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - feature/service-worker-updates  # Add your feature branch for testing
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './app/package-lock.json'
+          
+      - name: Install dependencies
+        run: |
+          cd app
+          npm ci
+          
+      - name: Build
+        run: |
+          cd app
+          npm run build
+          
+      - name: Configure for GitHub Pages
+        run: |
+          cd app/dist
+          # Create a .nojekyll file to prevent Jekyll processing
+          touch .nojekyll
+          # Create a CNAME file if you have a custom domain
+          # echo "yourdomain.com" > CNAME
+          # Create a custom 404 page that redirects to index.html for SPA routing
+          cp index.html 404.html
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: app/dist
+          clean: true

@@ -6,6 +6,9 @@ import App from './App';
 import theme from './styles/theme';
 import './styles/index.css';
 import './registerSW';
+
+// Handle GitHub Pages path issue for SPA routing
+const basePath = import.meta.env.BASE_URL;
 // Import virtual module from VitePWA
 import { registerSW } from 'virtual:pwa-register';
 
@@ -38,7 +41,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter {...routerOptions}>
+      <BrowserRouter basename={basePath} {...routerOptions}>
         <App />
       </BrowserRouter>
     </ThemeProvider>

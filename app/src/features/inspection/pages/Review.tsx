@@ -18,7 +18,7 @@ import {
 import Card from "../../../components/Card";
 import { db, type InspectionDraft, type SectionState } from "../db";
 import { sections as templateSections } from "../schema";
-import { generateLocalAiReview } from "../../../utils/localAiReview";
+import { generateLocalAiReview } from "../utils/localAi";
 import { useOfflineStatus } from "../../../utils/offlineStatus";
 
 // Helper function to get status color
@@ -119,25 +119,37 @@ export default function Review() {
         const localSummary = generateLocalAiReview(vehicle, sections);
         setSummary(localSummary);
       } else {
-        // Use remote AI service
-        const apiBase = import.meta.env.VITE_API_BASE || '';
-        const response = await fetch(`${apiBase}/api/ai/summarize`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            vehicle: draft.vehicle,
-            sections: draft.sections,
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to generate summary');
+        // Use remote AI service with local fallback
+        try {
+          const apiBase = import.meta.env.VITE_API_BASE || '';
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          
+          const response = await fetch(`${apiBase}/api/ai/summarize`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              vehicle: draft.vehicle,
+              sections: draft.sections,
+            }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error('Failed to generate summary');
+          }
+          
+          const data = await response.json();
+          setSummary(data);
+        } catch (error) {
+          console.log('Remote AI summary failed, using local fallback', error);
+          const localSummary = generateLocalAiReview(draft.vehicle, draft.sections);
+          setSummary(localSummary);
         }
-        
-        const data = await response.json();
-        setSummary(data);
       }
     } catch (err) {
       console.error("Error generating summary", err);
