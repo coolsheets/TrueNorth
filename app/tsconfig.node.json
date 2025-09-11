@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": true,
+    "composite": true,      // Required for project references
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "outDir": "./dist-node", // Add an output directory
+    "rootDir": "../"        // Set rootDir to project root to include both app and server
   },
   "include": [
     "vite.config.*",
