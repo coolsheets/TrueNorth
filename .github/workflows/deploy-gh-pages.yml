@@ -1,12 +1,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches:
-      - main
-      - master
-      - feature/service-worker-updates  # Add your feature branch for testing
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:  # Manual triggering only
 
 jobs:
   build-and-deploy:
@@ -20,7 +15,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            app/node_modules
+            server/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json', 'app/package-lock.json', 'server/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
           
       - name: Install dependencies
         run: |
