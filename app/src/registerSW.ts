@@ -1,7 +1,27 @@
 // Register service worker for PWA functionality
 
+// Simple pub-sub pattern for service worker updates
+type UpdateCallback = () => void;
+const subscribers: UpdateCallback[] = [];
+
+export function subscribeToSWUpdates(callback: UpdateCallback): () => void {
+  subscribers.push(callback);
+  return () => {
+    const index = subscribers.indexOf(callback);
+    if (index > -1) {
+      subscribers.splice(index, 1);
+    }
+  };
+}
+
+function notifySubscribers(): void {
+  console.log(`Notifying ${subscribers.length} subscribers about SW update`);
+  subscribers.forEach(callback => callback());
+}
+
 // Check if service workers are supported
 if ('serviceWorker' in navigator) {
+
   window.addEventListener('load', async () => {
     try {
       // Determine the correct path for the service worker
@@ -31,6 +51,32 @@ if ('serviceWorker' in navigator) {
         console.log('Service Worker is installing');
       } else if (registration.waiting) {
         console.log('Service Worker is waiting');
+        // There's a new service worker waiting to activate
+        notifySubscribers();
+      }
+      
+      // Add update detection
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        
+        // Track state changes of the service worker
+        newWorker.addEventListener('statechange', () => {
+          // If the new service worker is installed and waiting
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('New service worker is installed and waiting');
+            // Dispatch event to notify the app about the update
+            notifySubscribers();
+          }
+        });
+      });
+      
+      // FOR TESTING: Trigger update notification after 5 seconds
+      if (import.meta.env.DEV || import.meta.env.MODE === 'preview') {
+        setTimeout(() => {
+          console.log('TEST: Triggering update notification');
+          notifySubscribers();
+        }, 5000);
       }
     } catch (error: unknown) {
       console.error('Service Worker registration failed:', error);
@@ -48,6 +94,43 @@ if ('serviceWorker' in navigator) {
   });
 } else {
   console.warn('Service Workers are not supported in this browser. PWA functionality will be limited.');
+}
+
+/**
+ * Update the service worker immediately and reload the page
+ */
+export async function updateServiceWorker(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      console.log('No service worker registration found');
+      return;
+    }
+    
+    if (registration.waiting) {
+      console.log('Found waiting service worker, sending skip-waiting message');
+      
+      // Add a listener for controllerchange which indicates the new service worker has taken control
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        console.log('New service worker controller, refreshing page');
+        window.location.reload();
+      });
+      
+      // Send message to the waiting service worker to skip waiting
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      console.log('No waiting service worker found, checking for updates');
+      await registration.update();
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error('Error updating service worker:', error);
+  }
 }
 
 // Define type for BeforeInstallPromptEvent

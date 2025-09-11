@@ -91,6 +91,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,json}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
+        skipWaiting: false, // This allows us to handle updates with our custom notification
+        clientsClaim: true,
         runtimeCaching: [
           { 
             urlPattern: /\/api\//, 

@@ -34,7 +34,18 @@ export default [
       // We can see from the available rules that these exist
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-require-imports': 'warn',
+      '@typescript-eslint/no-require-imports': 'error', // Enforce ES6 imports
+      '@typescript-eslint/no-var-requires': 'error', // Disallow require statements
+      
+      // Project-specific rules
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['tailwindcss*', '*tailwind*'],
+            message: 'This project uses Material UI. Do not use Tailwind CSS.'
+          }
+        ]
+      }],
       
       // Add other TypeScript rules as needed
       
