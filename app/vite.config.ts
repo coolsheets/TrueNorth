@@ -94,7 +94,7 @@ export default defineConfig({
         ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
-        skipWaiting: false, // This allows us to handle updates with our custom notification
+        skipWaiting: true,
         clientsClaim: true,
         // Add event listener for the SKIP_WAITING message
         additionalManifestEntries: [

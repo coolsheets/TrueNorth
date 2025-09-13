@@ -115,70 +115,29 @@ if ('serviceWorker' in navigator) {
  */
 // Enhanced function to reliably update the service worker
 export async function updateServiceWorker(): Promise<void> {
-  if (!('serviceWorker' in navigator)) return;
-  
   try {
-    // Clear the update notification flag from localStorage
-    try {
-      localStorage.removeItem('sw-update-available');
-      sessionStorage.removeItem('sw-update-available');
-      console.log('Cleared update flags from storage');
-    } catch (e) {
-      console.warn('Failed to clear storage flags', e);
-    }
-    
-    // Force reload immediately to apply updates
-    console.log('Forcing immediate reload to apply service worker updates');
-    window.location.reload();
-    
-    // The code below will only run if the immediate reload fails
     const registration = await navigator.serviceWorker.getRegistration();
+    
     if (!registration) {
-      console.log('No service worker registration found');
-      window.location.reload();
+      console.error('No service worker registration found');
       return;
     }
-
-    // Set up a listener for the controllerchange event
-    // This happens when a new service worker takes control
-    let refreshing = false;
-    const controllerChangeListener = () => {
-      if (refreshing) return;
-      refreshing = true;
-      console.log('New service worker has taken control, reloading page');
-      window.location.reload();
-    };
-    navigator.serviceWorker.addEventListener('controllerchange', controllerChangeListener);
     
     if (registration.waiting) {
-      console.log('Found waiting service worker, activating it');
-      
-      // Try multiple methods to activate the waiting service worker
-      
-      // Method 1: postMessage to the waiting service worker
+      // If there's a waiting worker, send it the SKIP_WAITING message
+      console.log('Sending skip waiting message to waiting service worker');
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       
-      // Method 2: Use messageServiceWorker utility function as backup
-      await messageServiceWorker(registration.waiting, { type: 'SKIP_WAITING' });
-      
-      // If the controllerchange event doesn't fire within 3 seconds, 
-      // force a reload anyway as a fallback
-      setTimeout(() => {
-        if (!refreshing) {
-          console.log('Force reload after timeout (no controllerchange event)');
-          window.location.reload();
-        }
-      }, 3000);
+      // Add a listener for the controlling change before reloading
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('Controller changed, reloading page');
+        window.location.reload();
+      });
     } else {
-      console.log('No waiting service worker found, forcing update and reload');
-      // Check for updates and reload regardless
-      await registration.update();
-      window.location.reload();
+      console.log('No waiting service worker found to update');
     }
   } catch (error) {
     console.error('Error updating service worker:', error);
-    // As last resort, force a reload even on error
-    window.location.reload();
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Tooltip, CircularProgress, Typography, Box, Snackbar, Alert } from '@mui/material';
-import { showInstallPrompt } from '../registerSW';
+// import { showInstallPrompt } from '../registerSW';
 import { canInstallPWA, manualShowInstallPrompt, checkInstallationStatus } from '../utils/pwaInstall';
 import { getSslRecommendations } from '../utils/sslDiagnostic';
 

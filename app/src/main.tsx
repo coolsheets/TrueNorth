@@ -16,6 +16,10 @@ import { registerSW } from 'virtual:pwa-register';
 const updateSW = registerSW({
   onNeedRefresh() {
     console.log('New content available, click on reload button to update.');
+    // Add your own update UI notification logic here
+    // For example, show a banner/modal with an "Update Now" button
+    // The update button handler should call:
+    // updateSW(true); // this sends the SKIP_WAITING message and triggers controllerchange
   },
   onOfflineReady() {
     console.log('App ready to work offline');
@@ -26,6 +30,17 @@ const updateSW = registerSW({
   onRegisterError(error) {
     console.error('Service worker registration error', error);
   }
+});
+
+// Export updateSW for use in other components
+export { updateSW };
+
+// Add a global listener to refresh once when the new SW takes control
+let hasRefreshed = false;
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  if (hasRefreshed) return;
+  hasRefreshed = true;
+  window.location.reload();
 });
 
 // Opt into future behavior for React Router
