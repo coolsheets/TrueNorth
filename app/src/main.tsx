@@ -5,7 +5,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import App from './App';
 import theme from './styles/theme';
 import './styles/index.css';
-import './registerSW';
+// import './registerSW';
 
 // Handle GitHub Pages path issue for SPA routing
 const basePath = import.meta.env.BASE_URL;

@@ -4,70 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
 import path from 'path';
 
-// Custom plugin to ensure service worker files get the correct MIME type
-function serviceWorkerContentTypePlugin(): Plugin {
-  return {
-    name: 'configure-service-worker-content-type',
-    configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        // Set content type for service worker files
-        if (req.url?.endsWith('.js') && (req.url?.includes('/sw.js') || req.url?.includes('/service-worker.js') || req.url?.includes('/registerSW.js') || req.url?.includes('/workbox-'))) {
-          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-          res.setHeader('Service-Worker-Allowed', '/');
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        }
-        
-        // Set content type for manifest file
-        if (req.url?.endsWith('.webmanifest') || req.url?.endsWith('.json')) {
-          res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
-        }
-        
-        // Set content type for icon files
-        if (req.url?.endsWith('.png')) {
-          res.setHeader('Content-Type', 'image/png');
-          res.setHeader('Cache-Control', 'public, max-age=0');
-        }
-        
-        // Set content type for module JS files
-        if (req.url?.endsWith('.js') || req.url?.endsWith('.mjs')) {
-          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        }
-        
-        next();
-      });
-    },
-    configurePreviewServer(server) {
-      server.middlewares.use((req, res, next) => {
-        // Service worker files
-        if (req.url?.endsWith('/sw.js') || req.url?.includes('sw.js') || req.url?.includes('service-worker.js') || req.url?.includes('registerSW.js') || req.url?.includes('/workbox-')) {
-          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-          res.setHeader('Service-Worker-Allowed', '/');
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        }
-        
-        // Manifest files
-        if (req.url?.endsWith('.webmanifest') || req.url?.endsWith('manifest.json')) {
-          res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
-        }
-        
-        // Icon files
-        if (req.url?.endsWith('.png')) {
-          res.setHeader('Content-Type', 'image/png');
-          res.setHeader('Cache-Control', 'public, max-age=0');
-        }
-        
-        next();
-      });
-    }
-  };
-};
-
 export default defineConfig({
   // Determine the base path based on environment
   base: process.env.GITHUB_ACTIONS ? '/TrueNorth/' : '/', // Use repo name for GitHub Pages deployment
   plugins: [
     react(),
-    serviceWorkerContentTypePlugin(),
+    // serviceWorkerContentTypePlugin(),
     // Custom plugin to ensure icons are copied correctly
     {
       name: 'copy-icons-plugin',
@@ -84,7 +26,7 @@ export default defineConfig({
         'icons/screenshot-wide.png',
         'sw-skip-waiting.js'
       ],
-      injectRegister: 'script',
+      injectRegister: null,
       strategies: 'generateSW',
       filename: 'sw.js',
       devOptions: {
