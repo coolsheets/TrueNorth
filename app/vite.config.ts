@@ -19,13 +19,13 @@ export default defineConfig({
     },
     VitePWA({
       registerType: 'prompt', 
-      includeAssets: [
-        'icons/icon-192.png',  // Explicitly include the critical icons
-        'icons/icon-512.png',  // Explicitly include the critical icons
-        'icons/screenshot-narrow.png',
-        'icons/screenshot-wide.png',
-        'sw-skip-waiting.js'
-      ],
+      // includeAssets: [
+      //   'icons/icon-192.png',  // Explicitly include the critical icons
+      //   'icons/icon-512.png',  // Explicitly include the critical icons
+      //   'icons/screenshot-narrow.png',
+      //   'icons/screenshot-wide.png',
+      //   'sw-skip-waiting.js'
+      // ],
       injectRegister: null,
       strategies: 'generateSW',
       filename: 'sw.js',
