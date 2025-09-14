@@ -12,21 +12,7 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}=== PWA Service Worker Test Script (Updated) ===${NC}"
 echo ""
 
-# Step 1: Verify certificates
-if [ -f "./app/cert.pem" ] && [ -f "./app/key.pem" ]; then
-  echo -e "${GREEN}✓ SSL certificates found in app directory${NC}"
-else
-  echo -e "${RED}✗ SSL certificates not found in app directory${NC}"
-  echo -e "${YELLOW}Running certificate generation script...${NC}"
-  ./scripts/generate-certs.sh
-  
-  if [ ! -f "./app/cert.pem" ] || [ ! -f "./app/key.pem" ]; then
-    echo -e "${RED}Failed to generate certificates. Cannot continue.${NC}"
-    exit 1
-  fi
-fi
-
-# Step 2: Check for service worker browser compatibility
+# Step 1: Check for service worker browser compatibility
 echo ""
 echo -e "${BLUE}Checking browser compatibility requirements:${NC}"
 echo -e "${YELLOW}1. Use Chrome/Chromium 64+ or Firefox 63+${NC}"
@@ -35,13 +21,13 @@ echo -e "${YELLOW}3. For Chrome: check chrome://flags/#service-worker-internetco
 echo -e "${YELLOW}4. For Firefox: set dom.serviceWorkers.enabled to true in about:config${NC}"
 echo ""
 
-# Step 3: Prompt for networking mode
+# Step 2: Prompt for networking mode
 echo -e "${BLUE}Select networking mode:${NC}"
 echo "1) Local development (localhost)"
 echo "2) Network development (accessible from other devices)"
 read -p "Enter option [1-2]: " network_option
 
-# Step 4: Start the appropriate server
+# Step 3: Start the appropriate server
 cd app
 case $network_option in
   1)

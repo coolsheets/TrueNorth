@@ -27,6 +27,8 @@
 	},
 	"scripts": {
 		"bootstrap": "npm --prefix app i && npm --prefix server i",
+		"setup": "./scripts/setup-dependencies.sh",
+		"setup:fix": "./scripts/setup-dependencies.sh --fix",
 		"dev": "concurrently \"npm:dev:server\" \"npm:dev:app\"",
 		"dev:app": "npm --prefix app run dev",
 		"dev:server": "npm --prefix server run dev",
@@ -41,7 +43,9 @@
 		"lint": "eslint .",
 		"test": "npm --prefix app run test",
 		"e2e": "playwright test",
-		"install:deps": "npm install concurrently --save-dev"
+		"install:deps": "npm install concurrently --save-dev",
+		"install:all": "npm install && npm --prefix app install && npm --prefix server install",
+		"install:safe": "npm install && npm audit fix && npm --prefix app install && npm --prefix app audit fix && npm --prefix server install && npm --prefix server audit fix"
 	},
 	"devDependencies": {
 		"@types/node": "^20.11.30",

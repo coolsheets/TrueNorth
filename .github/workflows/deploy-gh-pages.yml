@@ -1,0 +1,74 @@
+name: Deploy to GitHub Pages
+
+on:
+  workflow_dispatch:  # Manual triggering only
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            app/node_modules
+            server/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json', 'app/package-lock.json', 'server/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+          
+      - name: Install dependencies
+        run: |
+          # First install root dependencies
+          npm ci
+          # Then install app-specific dependencies
+          cd app
+          npm ci
+          # Also install server dependencies
+          cd ../server
+          npm ci
+          
+      - name: Build
+        working-directory: ./app
+        run: npm run build
+          
+      - name: Configure for GitHub Pages
+        working-directory: ./app/dist
+        run: |
+          # Create a .nojekyll file to prevent Jekyll processing
+          touch .nojekyll
+          # Create a CNAME file if you have a custom domain
+          # echo "yourdomain.com" > CNAME
+          # Create a custom 404 page that redirects to index.html for SPA routing
+          cp index.html 404.html
+
+      - name: Verify build output
+        run: |
+          echo "Checking if dist directory exists..."
+          if [ -d "app/dist" ]; then
+            echo "✅ app/dist directory exists"
+            ls -la app/dist
+          else
+            echo "❌ app/dist directory does not exist"
+            exit 1
+          fi
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: app/dist
+          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use the automatic token
+          commit-message: "Deploy to GitHub Pages [skip ci]"

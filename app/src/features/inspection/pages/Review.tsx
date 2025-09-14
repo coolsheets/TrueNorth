@@ -18,7 +18,7 @@ import {
 import Card from "../../../components/Card";
 import { db, type InspectionDraft, type SectionState } from "../db";
 import { sections as templateSections } from "../schema";
-import { generateLocalAiReview } from "../../../utils/localAiReview";
+import { generateLocalAiReview } from "../utils/localAi";
 import { useOfflineStatus } from "../../../utils/offlineStatus";
 
 // Helper function to get status color
@@ -85,7 +85,10 @@ export default function Review() {
     loadDraft();
   }, [draftId, nav]);
 
-  const generateSummary = async () => {
+  // Define a timeout for API requests
+const API_TIMEOUT_MS = 15000; // 15 seconds default
+
+const generateSummary = async () => {
     if (!draft) return;
     
     setSummarizing(true);
@@ -119,25 +122,45 @@ export default function Review() {
         const localSummary = generateLocalAiReview(vehicle, sections);
         setSummary(localSummary);
       } else {
-        // Use remote AI service
-        const apiBase = import.meta.env.VITE_API_BASE || '';
-        const response = await fetch(`${apiBase}/api/ai/summarize`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            vehicle: draft.vehicle,
-            sections: draft.sections,
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to generate summary');
+        // Use remote AI service with local fallback
+        try {
+          const apiBase = import.meta.env.VITE_API_BASE || '';
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS); // Use the constant defined above
+          
+          const response = await fetch(`${apiBase}/api/ai/summarize`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              vehicle: draft.vehicle,
+              sections: draft.sections,
+            }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error('Failed to generate summary');
+          }
+          
+          const data = await response.json();
+          setSummary(data);
+        } catch (error) {
+          // Check if it's an AbortError (timeout)
+          const isTimeout = error instanceof Error && error.name === 'AbortError';
+          console.log(`Remote AI summary failed (${isTimeout ? 'timeout' : 'error'}), using local fallback`, error);
+          
+          // Set an informative error that won't be displayed (since we're handling it with local AI)
+          if (isTimeout) {
+            setError(`Request timed out after ${API_TIMEOUT_MS}ms. Using local AI fallback.`);
+          }
+          
+          const localSummary = generateLocalAiReview(draft.vehicle, draft.sections);
+          setSummary(localSummary);
         }
-        
-        const data = await response.json();
-        setSummary(data);
       }
     } catch (err) {
       console.error("Error generating summary", err);

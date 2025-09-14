@@ -35,8 +35,16 @@ const PWAStatus: React.FC = () => {
     setServiceWorkerActive(results.hasController);
 
     // Log the PWA installation status to the console
-    const status = logPwaInstallationStatus();
-    setInstallCriteria(status);
+    const checkPwaStatus = async () => {
+      try {
+        const status = await logPwaInstallationStatus();
+        setInstallCriteria(status);
+      } catch (error) {
+        console.error('Error checking PWA installation status:', error);
+      }
+    };
+    
+    checkPwaStatus();
     
     // Run SSL diagnostics and get recommendations
     const runSslChecks = async () => {
@@ -176,64 +184,84 @@ const PWAStatus: React.FC = () => {
           <Box sx={{ mt: 2, border: '1px solid #ddd', borderRadius: 1, p: 2, bgcolor: '#f5f5f5' }}>
             <Typography variant="subtitle2" gutterBottom>
               Installation Criteria 
-              <Chip 
-                size="small" 
-                label={installCriteria.isInstallable ? "Can Install" : "Cannot Install"}
-                color={installCriteria.isInstallable ? "success" : "error"}
-                sx={{ ml: 1 }}
-              />
+              {installCriteria === null ? (
+                <Chip 
+                  size="small"
+                  label="Checking..."
+                  color="info"
+                  sx={{ ml: 1 }}
+                />
+              ) : (
+                <Chip 
+                  size="small" 
+                  label={installCriteria.isInstallable ? "Can Install" : "Cannot Install"}
+                  color={installCriteria.isInstallable ? "success" : "error"}
+                  sx={{ ml: 1 }}
+                />
+              )}
             </Typography>
             
             <List dense>
-              <ListItem>
-                <ListItemText 
-                  primary="HTTPS Connection" 
-                  secondary={installCriteria.criteria.https ? "✓ Yes" : "✗ No - Required"} 
-                  secondaryTypographyProps={{
-                    color: installCriteria.criteria.https ? 'success.main' : 'error.main'
-                  }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Web App Manifest" 
-                  secondary={installCriteria.criteria.hasManifest ? "✓ Found" : "✗ Missing - Required"} 
-                  secondaryTypographyProps={{
-                    color: installCriteria.criteria.hasManifest ? 'success.main' : 'error.main'
-                  }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Service Worker" 
-                  secondary={installCriteria.criteria.serviceWorkerRegistered ? "✓ Registered" : "✗ Not Registered - Required"} 
-                  secondaryTypographyProps={{
-                    color: installCriteria.criteria.serviceWorkerRegistered ? 'success.main' : 'error.main'
-                  }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Required Icons" 
-                  secondary={installCriteria.criteria.hasRequiredIcons ? "✓ Found" : "⚠ Checking..."}
-                  secondaryTypographyProps={{
-                    color: installCriteria.criteria.hasRequiredIcons ? 'success.main' : 'warning.main'
-                  }}
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Display Mode" 
-                  secondary={installCriteria.criteria.displayMode}
-                />
-              </ListItem>
-              <Divider sx={{ my: 1 }} />
-              <ListItem>
-                <ListItemText 
-                  primary="Already Installed" 
-                  secondary={installCriteria.criteria.isStandalone ? "Yes (Standalone Mode)" : "No"}
-                />
-              </ListItem>
+              {installCriteria === null ? (
+                <ListItem>
+                  <ListItemText 
+                    primary="Loading installation criteria..." 
+                    secondary={<CircularProgress size={16} />}
+                  />
+                </ListItem>
+              ) : (
+                <>
+                  <ListItem>
+                    <ListItemText 
+                      primary="HTTPS Connection" 
+                      secondary={installCriteria.criteria?.https ? "✓ Yes" : "✗ No - Required"} 
+                      secondaryTypographyProps={{
+                        color: installCriteria.criteria?.https ? 'success.main' : 'error.main'
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Web App Manifest" 
+                      secondary={installCriteria.criteria?.hasManifest ? "✓ Found" : "✗ Missing - Required"} 
+                      secondaryTypographyProps={{
+                        color: installCriteria.criteria?.hasManifest ? 'success.main' : 'error.main'
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Service Worker" 
+                      secondary={installCriteria.criteria?.serviceWorkerRegistered ? "✓ Registered" : "✗ Not Registered - Required"} 
+                      secondaryTypographyProps={{
+                        color: installCriteria.criteria?.serviceWorkerRegistered ? 'success.main' : 'error.main'
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Required Icons" 
+                      secondary={installCriteria.criteria?.hasRequiredIcons ? "✓ Found" : "⚠ Checking..."}
+                      secondaryTypographyProps={{
+                        color: installCriteria.criteria?.hasRequiredIcons ? 'success.main' : 'warning.main'
+                      }}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Display Mode" 
+                      secondary={installCriteria.criteria?.displayMode || 'Unknown'}
+                    />
+                  </ListItem>
+                  <Divider sx={{ my: 1 }} />
+                  <ListItem>
+                    <ListItemText 
+                      primary="Already Installed" 
+                      secondary={installCriteria.criteria?.isStandalone ? "Yes (Standalone Mode)" : "No"}
+                    />
+                  </ListItem>
+                </>
+              )}
             </List>
           </Box>
         )}
