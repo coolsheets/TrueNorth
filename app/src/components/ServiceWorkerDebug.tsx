@@ -26,6 +26,9 @@ export const ServiceWorkerDebug: React.FC<ServiceWorkerDebugProps> = ({
       hasIndexedDB: typeof indexedDB !== 'undefined',
       https: window.location.protocol === 'https:',
       hostname: window.location.hostname,
+      pathname: window.location.pathname,
+      baseURL: import.meta.env.BASE_URL || '/',
+      isGitHubPages: window.location.hostname === 'coolsheets.github.io',
       registered: registered,
     };
     

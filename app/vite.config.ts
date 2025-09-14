@@ -23,7 +23,11 @@ export default defineConfig({
       filename: 'sw.js',
       // Include skipWaiting message handling for updates
       selfDestroying: false, // Don't destroy SW on page close
-      // Provide custom code to be included in the generated SW
+      // Explicitly set the base to match the app's base path
+      base: base,
+      // The scope should match the base path
+      scope: base,
+      // Properly configure for GitHub Pages deployment
       injectManifest: {
         additionalManifestEntries: [],
         globDirectory: 'dist',
@@ -63,25 +67,25 @@ export default defineConfig({
         ],
         icons: [
           { 
-            src: 'icons/icon-192.png',
+            src: `${base}icons/icon-192.png`,
             sizes: '192x192', 
             type: 'image/png',
             purpose: 'any'
           },
           { 
-            src: 'icons/icon-512.png',
+            src: `${base}icons/icon-512.png`,
             sizes: '512x512', 
             type: 'image/png',
             purpose: 'any'
           },
           { 
-            src: 'icons/icon-192.png',
+            src: `${base}icons/icon-192.png`,
             sizes: '192x192', 
             type: 'image/png', 
             purpose: 'maskable' 
           },
           { 
-            src: 'icons/icon-512.png',
+            src: `${base}icons/icon-512.png`,
             sizes: '512x512', 
             type: 'image/png', 
             purpose: 'maskable' 
@@ -152,8 +156,8 @@ export default defineConfig({
           }
         ],
         additionalManifestEntries: [
-          { url: 'icons/icon-192.png', revision: null },
-          { url: 'icons/icon-512.png', revision: null }
+          { url: `${base}icons/icon-192.png`, revision: null },
+          { url: `${base}icons/icon-512.png`, revision: null }
         ]
       }
     })

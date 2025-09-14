@@ -15,11 +15,12 @@ export function wireServiceWorker(onUpdate: () => void): Promise<void> {
 
     try {
       const base = import.meta.env.BASE_URL || '/';
-      // Ensure the URL is constructed correctly
-      const swPath = import.meta.env.DEV ? 'dev-dist/sw.js' : 'sw.js';
+      // Ensure the URL is constructed correctly - add base path for GitHub Pages
+      const swPath = import.meta.env.DEV ? 'dev-dist/sw.js' : `${base}sw.js`;
       
       // Debug URL construction
       console.log('SW Path:', swPath);
+      console.log('Base URL:', base);
       console.log('Origin:', window.location.origin);
       
       navigator.serviceWorker.register(swPath, { scope: base })
