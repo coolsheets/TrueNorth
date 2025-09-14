@@ -1,169 +1,108 @@
 // Register service worker for PWA functionality
 
-// Simple pub-sub pattern for service worker updates
-type UpdateCallback = () => void;
-const subscribers: UpdateCallback[] = [];
-
-export function subscribeToSWUpdates(callback: UpdateCallback): () => void {
-  subscribers.push(callback);
-  return () => {
-    const index = subscribers.indexOf(callback);
-    if (index > -1) {
-      subscribers.splice(index, 1);
+/**
+ * Registers a service worker and sets up update handling
+ * @param onUpdate Callback to be called when a new service worker is available
+ * @returns Promise that resolves when registration is complete
+ */
+export function wireServiceWorker(onUpdate: () => void): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (!('serviceWorker' in navigator)) {
+      console.warn('Service Worker not supported in this browser');
+      reject(new Error('Service Worker not supported'));
+      return;
     }
-  };
-}
 
-function notifySubscribers(): void {
-  console.log(`Notifying ${subscribers.length} subscribers about SW update`);
-  // Notify subscribers in this tab
-  subscribers.forEach(callback => callback());
-  
-  // Notify other tabs by setting a localStorage item
-  try {
-    localStorage.setItem('sw-update-available', Date.now().toString());
-  } catch (e) {
-    console.warn('Failed to use localStorage for SW update notification', e);
-  }
-}
-
-// Check if service workers are supported
-if ('serviceWorker' in navigator) {
-  // Listen for updates from other tabs
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'sw-update-available') {
-      console.log('Received SW update notification from another tab');
-      notifySubscribers();
-    }
-  });
-
-  window.addEventListener('load', async () => {
     try {
-      // Determine the correct path for the service worker
-      // In dev mode with VitePWA, it's in dev-dist/sw.js
-      // In production, it's in /sw.js
-      // For preview mode, also use dev-dist path
-      const baseUrl = import.meta.env.BASE_URL || '/';
-      const swUrl = new URL(
-        import.meta.env.DEV ? 'dev-dist/sw.js' : 'sw.js', 
-        new URL(baseUrl, window.location.origin)
-      );
-      console.log(`Attempting to register service worker from: ${swUrl.pathname}`);
+      const base = import.meta.env.BASE_URL || '/';
+      // Ensure the URL is constructed correctly
+      const swPath = import.meta.env.DEV ? 'dev-dist/sw.js' : 'sw.js';
       
-      // Register the service worker
-      const registration = await navigator.serviceWorker.register(swUrl.pathname, {
-        scope: import.meta.env.BASE_URL || '/'
-      });
+      // Debug URL construction
+      console.log('SW Path:', swPath);
+      console.log('Origin:', window.location.origin);
       
-      console.log('Service Worker registered successfully:', registration);
-      console.log('Service Worker scope:', registration.scope);
-      
-      // Check if we have an active service worker
-      if (registration.active) {
-        console.log('Service Worker is active');
-      } else if (registration.installing) {
-        console.log('Service Worker is installing');
-      } else if (registration.waiting) {
-        console.log('Service Worker is waiting');
-        // There's a new service worker waiting to activate
-        notifySubscribers();
-      }
-      
-      // Add update detection
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (!newWorker) return;
-        
-        // Track state changes of the service worker
-        newWorker.addEventListener('statechange', () => {
-          // If the new service worker is installed and waiting
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('New service worker is installed and waiting');
-            // Dispatch event to notify the app about the update
-            notifySubscribers();
+      navigator.serviceWorker.register(swPath, { scope: base })
+        .then(reg => {
+          console.log('Service Worker registered successfully:', reg);
+          console.log('Service Worker scope:', reg.scope);
+          
+          if (reg.active) {
+            console.log('Service Worker is active');
           }
+          
+          const listen = (worker?: ServiceWorker | null) => {
+            if (!worker) return;
+            worker.addEventListener('statechange', () => {
+              console.log('Service Worker state changed to:', worker.state);
+              if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New Service Worker installed and controlling');
+                onUpdate();
+              }
+            });
+          };
+
+          listen(reg.installing);
+          reg.addEventListener('updatefound', () => {
+            console.log('Service Worker update found');
+            listen(reg.installing);
+          });
+
+          // cross‑tab notify
+          window.addEventListener('storage', (e) => {
+            if (e.key === 'sw-update-available') {
+              console.log('Service Worker update detected from another tab');
+              onUpdate();
+            }
+          });
+          
+          // debounce reload on activation
+          let reloaded = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('Service Worker controller changed');
+            if (!reloaded) { 
+              reloaded = true; 
+              console.log('Reloading page due to Service Worker update');
+              location.reload(); 
+            }
+          });
+          
+          resolve();
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+          reject(error);
         });
-      });
-      
-      // FOR TESTING: Trigger update notification after 5 seconds
-      if (import.meta.env.DEV || import.meta.env.MODE === 'preview') {
-        setTimeout(() => {
-          console.log('TEST: Triggering update notification');
-          notifySubscribers();
-        }, 5000);
-      }
-    } catch (error: unknown) {
-      console.error('Service Worker registration failed:', error);
-      
-      // Log more detailed error information
-      if (error instanceof Error) {
-        if (error.name === 'SecurityError') {
-          console.error('SECURITY ERROR: This is likely due to HTTPS issues or MIME type misconfiguration.');
-          console.error('Make sure you are using HTTPS or localhost, and the server is sending the correct Content-Type headers.');
-        } else if (error.name === 'TypeError') {
-          console.error('TYPE ERROR: The URL might be incorrect or the file does not exist.');
-        }
-      }
+    } catch (err) {
+      console.error('Error during Service Worker setup:', err);
+      reject(err);
     }
   });
-} else {
-  console.warn('Service Workers are not supported in this browser. PWA functionality will be limited.');
 }
 
 /**
- * Update the service worker immediately and reload the page
+ * Applies a service worker update by sending the SKIP_WAITING message
  */
-// Enhanced function to reliably update the service worker
-export async function updateServiceWorker(): Promise<void> {
+export async function applyUpdate(): Promise<void> {
   try {
-    const registration = await navigator.serviceWorker.getRegistration();
+    const reg = await navigator.serviceWorker.getRegistration();
     
-    if (!registration) {
-      console.error('No service worker registration found');
+    if (!reg) {
+      console.warn('No service worker registration found to update');
       return;
     }
     
-    if (registration.waiting) {
-      // If there's a waiting worker, send it the SKIP_WAITING message
-      console.log('Sending skip waiting message to waiting service worker');
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      
-      // Add a listener for the controlling change before reloading
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('Controller changed, reloading page');
-        window.location.reload();
-      });
+    const waiting = reg.waiting;
+    if (waiting) {
+      console.log('Sending SKIP_WAITING message to waiting service worker');
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+      localStorage.setItem('sw-update-available', String(Date.now()));
     } else {
       console.log('No waiting service worker found to update');
     }
   } catch (error) {
-    console.error('Error updating service worker:', error);
+    console.error('Error applying service worker update:', error);
   }
-}
-
-// Utility function to send a message to a service worker with a timeout
-async function messageServiceWorker(sw: ServiceWorker, message: { type: string; [key: string]: unknown }): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    // Create a message channel for two-way communication
-    const messageChannel = new MessageChannel();
-    
-    // Set up a timeout in case the service worker doesn't respond
-    const timeout = setTimeout(() => {
-      reject(new Error('Timeout: Service worker did not respond'));
-    }, 2000);
-    
-    // Listen for a response from the service worker
-    messageChannel.port1.onmessage = (event) => {
-      clearTimeout(timeout);
-      resolve(event.data);
-    };
-    
-    // Send the message to the service worker
-    sw.postMessage(message, [messageChannel.port2]);
-  }).catch(err => {
-    console.warn('messageServiceWorker failed:', err);
-    // Don't throw, this is a best-effort approach
-  });
 }
 
 // Define type for BeforeInstallPromptEvent
@@ -184,8 +123,10 @@ window.addEventListener('beforeinstallprompt', (e) => {
   console.log('PWA is installable');
 });
 
-// Function to trigger install prompt (call this from your install button)
-export function showInstallPrompt() {
+/**
+ * Shows the installation prompt if available
+ */
+export function showInstallPrompt(): void {
   if (!deferredPrompt) {
     console.log('Installation prompt not available');
     return;

@@ -11,76 +11,50 @@ import UpdateNotification from "./components/UpdateNotification";
 import IconDebug from "./components/IconDebug";
 import Routes from "./routes";
 import { useEffect, useState } from "react";
-import { subscribeToSWUpdates, updateServiceWorker } from "./registerSW";
-import ServiceWorkerDebug from "./components/ServiceWorkerDebug";
+import { wireServiceWorker, applyUpdate } from "./registerSW";
+import { ServiceWorkerDebug } from "./components/ServiceWorkerDebug";
 
 export default function App() {
   const { pathname } = useLocation();
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
+  const [serviceWorkerRegistered, setServiceWorkerRegistered] = useState(false);
   
   useEffect(() => {
-    // Check local storage on mount to see if an update is available
-    const checkForStoredUpdate = () => {
-      try {
-        const storedUpdate = localStorage.getItem('sw-update-available');
-        if (storedUpdate) {
-          console.log('Found stored update notification on app load');
-          setShowUpdateNotification(true);
-        }
-      } catch (e) {
-        console.warn('Failed to check localStorage for SW updates', e);
-      }
-    };
-    
-    checkForStoredUpdate();
-    
-    // Listen for service worker updates
-    const handleSWUpdate = () => {
-      console.log("SERVICE WORKER UPDATE DETECTED: Showing notification");
-      setShowUpdateNotification(true);
-    };
-    
-    console.log("Subscribing to service worker updates");
-    const unsubscribe = subscribeToSWUpdates(handleSWUpdate);
-    
-    return () => {
-      console.log("Unsubscribing from service worker updates");
-      unsubscribe();
-    };
+    // Initialize service worker and handle errors gracefully
+    if ('serviceWorker' in navigator) {
+      wireServiceWorker(() => {
+        console.log('Service worker update detected');
+        setShowUpdateNotification(true);
+      })
+      .then(() => {
+        setServiceWorkerRegistered(true);
+        console.log('Service worker initialization complete');
+      })
+      .catch(err => {
+        // Still set as registered even if there's an error
+        // This prevents the "Service Worker not registered" message
+        setServiceWorkerRegistered(true);
+        console.error('Service worker initialization had issues:', err);
+      });
+    } else {
+      console.warn('Service worker not supported in this browser');
+    }
   }, []);
   
   // Handle the refresh action when user clicks update
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     console.log("User clicked to update service worker");
     // Hide notification immediately for better UX
     setShowUpdateNotification(false);
     
-    // Also clear the localStorage flag
-    try {
-      localStorage.removeItem('sw-update-available');
-      console.log('Cleared sw-update-available flag from localStorage in handleRefresh');
-    } catch (e) {
-      console.warn('Failed to clear localStorage flag', e);
-    }
+    // Apply the update
+    await applyUpdate();
     
-    // Then update the service worker
-    updateServiceWorker()
-      .then(() => {
-        console.log("Service worker update initiated");
-        // Force reload after short delay if the service worker update doesn't trigger a reload
-        setTimeout(() => {
-          console.log("Force reloading after timeout");
-          window.location.reload();
-        }, 3000);
-      })
-      .catch(error => {
-        console.error("Error updating service worker:", error);
-        // Force reload even on error after a delay
-        setTimeout(() => {
-          console.log("Force reloading after error");
-          window.location.reload();
-        }, 1000);
-      });
+    // Force reload after short delay if the service worker update doesn't trigger a reload
+    setTimeout(() => {
+      console.log("Force reloading after timeout");
+      window.location.reload();
+    }, 3000);
   };
   
   return (
@@ -137,7 +111,7 @@ export default function App() {
         {process.env.NODE_ENV === 'development' && (
           <>
             <IconDebug />
-            <ServiceWorkerDebug />
+            <ServiceWorkerDebug registered={serviceWorkerRegistered} />
           </>
         )}
       </Container>

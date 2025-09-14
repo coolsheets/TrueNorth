@@ -6,3 +6,9 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// Add client claim on activation to ensure the new service worker takes over
+self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activating and claiming clients');
+  self.clients.claim();
+});

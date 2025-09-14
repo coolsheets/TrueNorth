@@ -1,16 +1,15 @@
-import { defineConfig, Plugin } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
 import path from 'path';
 
+const base = process.env.GITHUB_ACTIONS ? '/TrueNorth/' : '/';
+
 export default defineConfig({
-  // Determine the base path based on environment
-  base: process.env.GITHUB_ACTIONS ? '/TrueNorth/' : '/', // Use repo name for GitHub Pages deployment
+  base,
   plugins: [
     react(),
-    // serviceWorkerContentTypePlugin(),
-    // Custom plugin to ensure icons are copied correctly
     {
       name: 'copy-icons-plugin',
       buildStart() {
@@ -18,14 +17,7 @@ export default defineConfig({
       }
     },
     VitePWA({
-      registerType: 'prompt', 
-      // includeAssets: [
-      //   'icons/icon-192.png',  // Explicitly include the critical icons
-      //   'icons/icon-512.png',  // Explicitly include the critical icons
-      //   'icons/screenshot-narrow.png',
-      //   'icons/screenshot-wide.png',
-      //   'sw-skip-waiting.js'
-      // ],
+      registerType: 'prompt',
       injectRegister: null,
       strategies: 'generateSW',
       filename: 'sw.js',
@@ -34,12 +26,14 @@ export default defineConfig({
         navigateFallback: 'index.html',
         type: 'module'
       },
+      includeAssets: ['icons/icon-192.png', 'icons/icon-512.png', 'sw-skip-waiting.js'],
       manifest: {
         name: 'PPI Canada',
         short_name: 'PPI',
         description: 'Pre-Purchase Inspection Application',
         id: '/index.html',
-        start_url: '/',
+        start_url: `${base}`,
+        scope: `${base}`,
         display: 'standalone',
         display_override: ['window-controls-overlay', 'standalone', 'browser'],
         orientation: 'portrait',
@@ -48,40 +42,38 @@ export default defineConfig({
         categories: ['productivity', 'utilities'],
         screenshots: [
           {
-            src: 'icons/screenshot-wide.png', // Changed to relative path
+            src: 'icons/screenshot-wide.png',
             sizes: '1920x1080',
             type: 'image/png',
             form_factor: 'wide'
           },
           {
-            src: 'icons/screenshot-narrow.png', // Changed to relative path
+            src: 'icons/screenshot-narrow.png',
             sizes: '750x1334',
             type: 'image/png'
           }
         ],
         icons: [
-          // Standard icons for mobile - try with both absolute and relative paths
           { 
-            src: 'icons/icon-192.png', // Changed to relative path
+            src: 'icons/icon-192.png',
             sizes: '192x192', 
             type: 'image/png',
             purpose: 'any'
           },
           { 
-            src: 'icons/icon-512.png', // Changed to relative path
+            src: 'icons/icon-512.png',
             sizes: '512x512', 
             type: 'image/png',
             purpose: 'any'
           },
-          // Maskable icons (for Android adaptive icons)
           { 
-            src: 'icons/icon-192.png', // Changed to relative path
+            src: 'icons/icon-192.png',
             sizes: '192x192', 
             type: 'image/png', 
             purpose: 'maskable' 
           },
           { 
-            src: 'icons/icon-512.png', // Changed to relative path
+            src: 'icons/icon-512.png',
             sizes: '512x512', 
             type: 'image/png', 
             purpose: 'maskable' 
@@ -89,20 +81,38 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: [
-          '**/*.{js,css,html,ico,png,svg,webmanifest,json}'
-        ],
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
-        skipWaiting: true,
+        navigateFallback: `${base}index.html`,
         clientsClaim: true,
-        // Add event listener for the SKIP_WAITING message
-        additionalManifestEntries: [
-          // Use only one format for icons to avoid conflicts
-          { url: 'icons/icon-192.png', revision: null },
-          { url: 'icons/icon-512.png', revision: null }
-        ],
+        skipWaiting: false,
+        importScripts: ['sw-fix.js'],
         runtimeCaching: [
+          { 
+            urlPattern: /\/api\/(ai|inspections)/,
+            handler: 'NetworkFirst', 
+            options: { 
+              cacheName: 'api', 
+              networkTimeoutSeconds: 5 
+            } 
+          },
+          { 
+            urlPattern: ({request}) => request.destination === 'document', 
+            handler: 'NetworkFirst' 
+          },
+          { 
+            urlPattern: ({request}) => ['style','script','worker'].includes(request.destination), 
+            handler: 'StaleWhileRevalidate' 
+          },
+          { 
+            urlPattern: ({request}) => ['image','font'].includes(request.destination), 
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'assets-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
@@ -113,23 +123,11 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
-          },
-          {
-            // Handle API requests when offline by providing a fallback response
-            urlPattern: /\/api\/(ai|inspections)/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 // 1 hour
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
           }
+        ],
+        additionalManifestEntries: [
+          { url: 'icons/icon-192.png', revision: null },
+          { url: 'icons/icon-512.png', revision: null }
         ]
       }
     })
