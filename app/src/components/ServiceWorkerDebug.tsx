@@ -10,11 +10,14 @@ export const ServiceWorkerDebug: React.FC<ServiceWorkerDebugProps> = ({
   registered = false,
   error = null
 }) => {
-  const [debug, setDebug] = React.useState<Record<string, any>>({});
+  // Define a more specific type for the diagnostic data
+  type DiagnosticData = Record<string, string | boolean | string[] | null | undefined>;
+  
+  const [debug, setDebug] = React.useState<DiagnosticData>({});
   
   React.useEffect(() => {
     // Comprehensive SW diagnostics
-    const diagnostic: Record<string, any> = {
+    const diagnostic: DiagnosticData = {
       hasNavigator: typeof navigator !== 'undefined',
       hasServiceWorker: 'serviceWorker' in navigator,
       hasRegister: navigator?.serviceWorker?.register !== undefined,
