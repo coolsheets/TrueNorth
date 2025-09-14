@@ -113,6 +113,15 @@ export default function App() {
             >
               Export
             </Link>
+            <Link
+              component={RouterLink}
+              to="/admin/inspections"
+              color="inherit"
+              underline={pathname === "/admin/inspections" ? "always" : "none"}
+              sx={{ fontSize: '0.875rem', opacity: 0.9 }}
+            >
+              Admin
+            </Link>
             <InstallPWA />
           </Stack>
         </Toolbar>
