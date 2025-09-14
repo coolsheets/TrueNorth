@@ -5,12 +5,22 @@ export async function checkPwaInstallationCriteria() {
     https: window.location.protocol === 'https:' || window.location.hostname === 'localhost',
     hasManifest: !!document.querySelector('link[rel="manifest"]'),
     serviceWorkerSupported: 'serviceWorker' in navigator,
-    serviceWorkerRegistered: navigator?.serviceWorker?.controller !== null,
+    serviceWorkerRegistered: false, // Will be updated asynchronously
     hasRequiredIcons: false,
     isStandalone: window.matchMedia('(display-mode: standalone)').matches,
     hasRegisteredPrompt: false,
     displayMode: document.querySelector('link[rel="manifest"]') ? 'Checking manifest...' : 'No manifest found'
   };
+  
+  // Check if service worker is registered using getRegistrations()
+  if (criteria.serviceWorkerSupported) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      criteria.serviceWorkerRegistered = registrations.length > 0;
+    } catch (e) {
+      console.error('Error checking service worker registration', e);
+    }
+  }
 
   if (criteria.hasManifest) {
     const href = document.querySelector('link[rel="manifest"]')?.getAttribute('href') || '/manifest.webmanifest';

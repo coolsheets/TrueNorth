@@ -21,6 +21,14 @@ export default defineConfig({
       injectRegister: null,
       strategies: 'generateSW',
       filename: 'sw.js',
+      // Include skipWaiting message handling for updates
+      selfDestroying: false, // Don't destroy SW on page close
+      // Provide custom code to be included in the generated SW
+      injectManifest: {
+        additionalManifestEntries: [],
+        globDirectory: 'dist',
+        swDest: 'dist/sw.js',
+      },
       devOptions: {
         enabled: true,
         navigateFallback: 'index.html',
@@ -84,14 +92,32 @@ export default defineConfig({
         navigateFallback: `${base}index.html`,
         clientsClaim: true,
         skipWaiting: false,
-        importScripts: ['sw-fix.js'],
+        // Using built-in Workbox configurations instead of external scripts
+        // Handle error conditions properly with built-in Workbox settings
+        navigationPreload: true, // Enable navigation preload for better performance
+        cleanupOutdatedCaches: true, // Clean up old cache versions
+        sourcemap: true, // Generate sourcemaps for easier debugging
+        // Ensure we handle network errors gracefully
         runtimeCaching: [
           { 
             urlPattern: /\/api\/(ai|inspections)/,
             handler: 'NetworkFirst', 
             options: { 
               cacheName: 'api', 
-              networkTimeoutSeconds: 5 
+              networkTimeoutSeconds: 5,
+              // Handle network errors gracefully
+              fetchOptions: {
+                credentials: 'same-origin'
+              },
+              // Show a fallback on network error
+              plugins: [{
+                handlerDidError: async () => {
+                  return new Response('Network error, data is temporarily unavailable', {
+                    status: 408,
+                    headers: { 'Content-Type': 'text/plain' }
+                  });
+                }
+              }]
             } 
           },
           { 

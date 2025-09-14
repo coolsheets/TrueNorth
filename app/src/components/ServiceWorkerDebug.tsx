@@ -3,10 +3,12 @@ import { Box, Typography, Paper } from '@mui/material';
 
 interface ServiceWorkerDebugProps {
   registered?: boolean;
+  error?: Error | null;
 }
 
 export const ServiceWorkerDebug: React.FC<ServiceWorkerDebugProps> = ({ 
-  registered = false 
+  registered = false,
+  error = null
 }) => {
   const [debug, setDebug] = React.useState<Record<string, any>>({});
   
@@ -36,12 +38,23 @@ export const ServiceWorkerDebug: React.FC<ServiceWorkerDebugProps> = ({
     console.log('Service Worker Support Diagnostic:', diagnostic);
     setDebug(diagnostic);
     
+    // Include error information in diagnostic
+    if (error) {
+      diagnostic.hasError = true;
+      diagnostic.errorMessage = error.message;
+      diagnostic.errorName = error.name;
+      diagnostic.errorStack = error.stack;
+    } else {
+      diagnostic.hasError = false;
+    }
+    
     // Check if installable
     const isInstallable = 
       diagnostic.https && 
       diagnostic.hasManifest && 
       diagnostic.hasServiceWorker && 
       registered && 
+      !error && 
       icons.length > 0;
       
     console.log('PWA Installation Status');
@@ -64,15 +77,59 @@ export const ServiceWorkerDebug: React.FC<ServiceWorkerDebugProps> = ({
       hasRequiredIcons: icons.length > 0,
     });
     
-  }, [registered]);
+  }, [registered, error]);
 
   // Only render in development
   if (process.env.NODE_ENV !== 'development') return null;
   
   return (
-    <Paper sx={{ p: 2, my: 2, fontSize: '0.75rem', opacity: 0.8 }}>
-      <Typography variant="subtitle2">Service Worker Debug</Typography>
-      <Box component="pre" sx={{ fontSize: '0.65rem' }}>
+    <Paper sx={{ p: 2, mb: 2, mt: 4 }}>
+      <Typography variant="h6" gutterBottom>
+        Service Worker Debug
+        {error ? (
+          <Box component="span" sx={{ 
+            display: 'inline-block',
+            ml: 1,
+            color: 'error.main',
+            fontSize: '0.8rem',
+            fontWeight: 'normal'
+          }}>
+            (Registration Failed)
+          </Box>
+        ) : registered ? (
+          <Box component="span" sx={{ 
+            display: 'inline-block',
+            ml: 1,
+            color: 'success.main',
+            fontSize: '0.8rem',
+            fontWeight: 'normal'
+          }}>
+            (Registered)
+          </Box>
+        ) : null}
+      </Typography>
+      
+      {error && (
+        <Box sx={{ 
+          p: 1.5, 
+          mb: 2,
+          bgcolor: 'error.light', 
+          color: 'error.contrastText',
+          borderRadius: 1
+        }}>
+          <Typography variant="subtitle2">Error: {error?.name || 'Unknown'}</Typography>
+          <Typography variant="body2">{error?.message || 'An error occurred during service worker registration'}</Typography>
+        </Box>
+      )}
+      
+      <Box component="pre" sx={{ 
+        fontSize: '0.8rem', 
+        p: 1, 
+        bgcolor: '#f5f5f5', 
+        borderRadius: 1,
+        maxHeight: '200px',
+        overflow: 'auto'
+      }}>
         {JSON.stringify(debug, null, 2)}
       </Box>
     </Paper>

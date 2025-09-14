@@ -85,7 +85,10 @@ export default function Review() {
     loadDraft();
   }, [draftId, nav]);
 
-  const generateSummary = async () => {
+  // Define a timeout for API requests
+const API_TIMEOUT_MS = 15000; // 15 seconds default
+
+const generateSummary = async () => {
     if (!draft) return;
     
     setSummarizing(true);
@@ -123,7 +126,7 @@ export default function Review() {
         try {
           const apiBase = import.meta.env.VITE_API_BASE || '';
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS); // Use the constant defined above
           
           const response = await fetch(`${apiBase}/api/ai/summarize`, {
             method: 'POST',
@@ -146,7 +149,15 @@ export default function Review() {
           const data = await response.json();
           setSummary(data);
         } catch (error) {
-          console.log('Remote AI summary failed, using local fallback', error);
+          // Check if it's an AbortError (timeout)
+          const isTimeout = error instanceof Error && error.name === 'AbortError';
+          console.log(`Remote AI summary failed (${isTimeout ? 'timeout' : 'error'}), using local fallback`, error);
+          
+          // Set an informative error that won't be displayed (since we're handling it with local AI)
+          if (isTimeout) {
+            setError(`Request timed out after ${API_TIMEOUT_MS}ms. Using local AI fallback.`);
+          }
+          
           const localSummary = generateLocalAiReview(draft.vehicle, draft.sections);
           setSummary(localSummary);
         }

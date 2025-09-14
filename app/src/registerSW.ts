@@ -35,8 +35,15 @@ export function wireServiceWorker(onUpdate: () => void): Promise<void> {
             if (!worker) return;
             worker.addEventListener('statechange', () => {
               console.log('Service Worker state changed to:', worker.state);
-              if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('New Service Worker installed and controlling');
+              
+              // Only trigger update notification if:
+              // 1. Worker reached 'installed' state
+              // 2. There's a controller (not first page load)
+              // 3. The controller is different from this worker (this indicates an update, not initial install)
+              if (worker.state === 'installed' && 
+                  navigator.serviceWorker.controller && 
+                  worker !== navigator.serviceWorker.controller) {
+                console.log('New Service Worker update installed (not first install)');
                 onUpdate();
               }
             });
@@ -82,24 +89,34 @@ export function wireServiceWorker(onUpdate: () => void): Promise<void> {
 
 /**
  * Applies a service worker update by sending the SKIP_WAITING message
+ * 
+ * This function attempts to use the VitePWA updateSW function if available,
+ * and falls back to manually triggering the update if not.
  */
 export async function applyUpdate(): Promise<void> {
   try {
-    const reg = await navigator.serviceWorker.getRegistration();
-    
-    if (!reg) {
-      console.warn('No service worker registration found to update');
-      return;
+    // Try to import the updateSW function from main.tsx
+    try {
+      const { updateSW } = await import('./main');
+      if (updateSW) {
+        console.log('Using VitePWA updateSW function');
+        // Call with true to send SKIP_WAITING message
+        updateSW(true);
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not import updateSW from main.tsx, falling back to manual update', err);
     }
     
-    const waiting = reg.waiting;
-    if (waiting) {
-      console.log('Sending SKIP_WAITING message to waiting service worker');
-      waiting.postMessage({ type: 'SKIP_WAITING' });
-      localStorage.setItem('sw-update-available', String(Date.now()));
-    } else {
-      console.log('No waiting service worker found to update');
-    }
+    // Import the helper function for sending skip waiting message
+    const { sendSkipWaitingMessage } = await import('./utils/serviceWorkerHelpers');
+    await sendSkipWaitingMessage();
+    
+    // Set a timeout to reload the page if the controllerchange event doesn't fire
+    setTimeout(() => {
+      console.log('Forcing page reload after timeout');
+      window.location.reload();
+    }, 3000);
   } catch (error) {
     console.error('Error applying service worker update:', error);
   }

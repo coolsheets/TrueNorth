@@ -12,17 +12,22 @@ const basePath = import.meta.env.BASE_URL;
 // Import virtual module from VitePWA
 import { registerSW } from 'virtual:pwa-register';
 
+// Create an event bus for service worker updates
+export const swEvents = {
+  updateAvailable: new CustomEvent('sw:update-available'),
+  offlineReady: new CustomEvent('sw:offline-ready')
+};
+
 // Register the service worker using VitePWA
 const updateSW = registerSW({
   onNeedRefresh() {
     console.log('New content available, click on reload button to update.');
-    // Add your own update UI notification logic here
-    // For example, show a banner/modal with an "Update Now" button
-    // The update button handler should call:
-    // updateSW(true); // this sends the SKIP_WAITING message and triggers controllerchange
+    // Dispatch event for App component to show update notification
+    window.dispatchEvent(swEvents.updateAvailable);
   },
   onOfflineReady() {
     console.log('App ready to work offline');
+    window.dispatchEvent(swEvents.offlineReady);
   },
   onRegistered(registration) {
     console.log('Service worker has been registered', registration);
@@ -35,13 +40,13 @@ const updateSW = registerSW({
 // Export updateSW for use in other components
 export { updateSW };
 
-// Add a global listener to refresh once when the new SW takes control
-let hasRefreshed = false;
-navigator.serviceWorker?.addEventListener('controllerchange', () => {
-  if (hasRefreshed) return;
-  hasRefreshed = true;
-  window.location.reload();
-});
+// Import service worker helper to handle updates
+import { setupServiceWorkerMessageHandling } from './utils/serviceWorkerHelpers';
+
+// Setup service worker messaging
+if ('serviceWorker' in navigator) {
+  setupServiceWorkerMessageHandling();
+}
 
 // Opt into future behavior for React Router
 const routerOptions = {

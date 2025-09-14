@@ -18,27 +18,41 @@ export default function App() {
   const { pathname } = useLocation();
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
   const [serviceWorkerRegistered, setServiceWorkerRegistered] = useState(false);
+  const [serviceWorkerError, setServiceWorkerError] = useState<Error | null>(null);
   
   useEffect(() => {
-    // Initialize service worker and handle errors gracefully
+    // Listen for update events from VitePWA (main.tsx)
+    const handleUpdateAvailable = () => {
+      console.log('Service worker update detected from VitePWA');
+      setShowUpdateNotification(true);
+    };
+    
+    window.addEventListener('sw:update-available', handleUpdateAvailable);
+    
+    // Initialize our custom service worker as a fallback
     if ('serviceWorker' in navigator) {
       wireServiceWorker(() => {
-        console.log('Service worker update detected');
+        console.log('Service worker update detected from wireServiceWorker');
         setShowUpdateNotification(true);
       })
       .then(() => {
         setServiceWorkerRegistered(true);
+        setServiceWorkerError(null);
         console.log('Service worker initialization complete');
       })
       .catch(err => {
-        // Still set as registered even if there's an error
-        // This prevents the "Service Worker not registered" message
-        setServiceWorkerRegistered(true);
+        // Properly track the error state instead of masking it
+        setServiceWorkerRegistered(false);
+        setServiceWorkerError(err instanceof Error ? err : new Error(String(err)));
         console.error('Service worker initialization had issues:', err);
       });
     } else {
       console.warn('Service worker not supported in this browser');
     }
+    
+    return () => {
+      window.removeEventListener('sw:update-available', handleUpdateAvailable);
+    };
   }, []);
   
   // Handle the refresh action when user clicks update
@@ -111,7 +125,10 @@ export default function App() {
         {process.env.NODE_ENV === 'development' && (
           <>
             <IconDebug />
-            <ServiceWorkerDebug registered={serviceWorkerRegistered} />
+            <ServiceWorkerDebug 
+              registered={serviceWorkerRegistered}
+              error={serviceWorkerError} 
+            />
           </>
         )}
       </Container>
