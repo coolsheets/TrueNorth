@@ -24,14 +24,17 @@ class InspectionDatabase extends Dexie {
 export const db = new InspectionDatabase();
 
 // Handle database upgrade
-db.on('versionchange', () => {
+db.on('versionchange', async () => {
   // Ensure we have an initial sync settings record
-  db.settings.get('syncSettings').then(settings => {
+  try {
+    const settings = await db.settings.get('syncSettings');
     if (!settings) {
-      db.settings.put({
+      await db.settings.put({
         id: 'syncSettings',
         lastSyncTimestamp: null
       });
     }
-  });
+  } catch (error) {
+    console.error('Error during versionchange event:', error);
+  }
 });
