@@ -61,15 +61,18 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       };
       
       // Insert or update in MongoDB
-      const doc = await Inspection.findOneAndUpdate(
+      const result = await Inspection.findOneAndUpdate(
         { localId: id },
         formattedData,
-        { upsert: true, new: true }
+        { upsert: true, new: true, rawResult: true }
       );
       
       results.syncedIds.push(id);
-      if (doc?._id) {
-        results.mongoIds[id] = doc._id.toString();
+      // Use upsertedId if a new document was created, otherwise use doc._id
+      if (result?.lastErrorObject?.upserted) {
+        results.mongoIds[id] = result.lastErrorObject.upserted.toString();
+      } else if (result?.value?._id) {
+        results.mongoIds[id] = result.value._id.toString();
       }
     }
     
