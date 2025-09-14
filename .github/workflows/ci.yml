@@ -42,7 +42,10 @@ jobs:
             ${{ runner.os }}-npm-
       - run: npm install
       - run: npm run bootstrap
-      - run: npm --prefix app run test
+      - name: Run tests
+        run: npm --prefix app run test
+        env:
+          NODE_ENV: test
 
   build:
     runs-on: ubuntu-latest

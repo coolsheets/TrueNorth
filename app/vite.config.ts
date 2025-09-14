@@ -164,10 +164,26 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
-    https: {
-      key: fs.readFileSync(path.resolve(__dirname, 'localhost+3-key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, 'localhost+3.pem'))
-    }
+    https: (() => {
+      // Only use HTTPS if certificates exist (local development)
+      try {
+        const keyPath = path.resolve(__dirname, 'localhost+3-key.pem');
+        const certPath = path.resolve(__dirname, 'localhost+3.pem');
+        
+        if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+          return {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath)
+          };
+        } else {
+          console.log('SSL certificates not found, HTTPS will not be used in dev server');
+          return undefined;
+        }
+      } catch (err) {
+        console.log('Error loading SSL certificates, falling back to HTTP:', err instanceof Error ? err.message : String(err));
+        return undefined;
+      }
+    })()
   },
   resolve: {
     alias: {
