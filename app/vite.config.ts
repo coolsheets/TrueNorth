@@ -162,6 +162,9 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+      proxy: {
+        '/api': 'http://localhost:3000'
+      },
     https: (() => {
       // Only use HTTPS if certificates exist (local development)
       try {
