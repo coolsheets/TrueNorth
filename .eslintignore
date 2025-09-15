@@ -1,0 +1,2 @@
+# Ignore Vite SW dev config from linting
+app/vite.sw-dev.config.ts
