@@ -72,7 +72,7 @@ if (fs.existsSync(manifestPath)) {
     const manifestContent = fs.readFileSync(manifestPath, 'utf8');
     // Try to parse it
     JSON.parse(manifestContent);
-  } catch (error) {
+  } catch {
     // If not valid JSON, create a basic valid one
     console.log('Creating valid manifest.webmanifest');
     const validManifest = {
