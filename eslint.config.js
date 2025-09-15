@@ -1,4 +1,5 @@
-import tseslint from 'typescript-eslint';
+import tseslintPlugin from '@typescript-eslint/eslint-plugin';
+import tseslintParser from '@typescript-eslint/parser';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
@@ -12,14 +13,13 @@ export default [
       'app/dev-dist/**', // Ignore service worker files completely since they're generated
       'scripts/start-secure.cjs', // Ignore CommonJS script file
       // Add any other patterns that were in your .eslintignore file
-        'app/vite.sw-dev.config.ts', // Ignore Vite SW dev config
+      'app/vite.sw-dev.config.ts', // Ignore Vite SW dev config
     ]
   },
-  ...tseslint.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
-      parser: tseslint.parser,
+      parser: tseslintParser,
       parserOptions: {
         project: './tsconfig.eslint.json',
         ecmaVersion: 'latest',
@@ -27,16 +27,14 @@ export default [
       }
     },
     plugins: {
-      '@typescript-eslint': tseslint.plugin,
+      '@typescript-eslint': tseslintPlugin,
       'react': reactPlugin,
       'react-hooks': reactHooksPlugin
     },
     rules: {
-      // We can see from the available rules that these exist
       '@typescript-eslint/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-require-imports': 'warn',
-      
       // Add other TypeScript rules as needed
       
       // React rules
