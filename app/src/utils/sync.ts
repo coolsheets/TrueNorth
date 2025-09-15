@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { InspectionType, ServerInspection } from '../types/inspection';
+import { ServerInspection } from '../types/inspection';
 
 interface SyncResult {
   syncedIds: number[];
@@ -87,9 +87,11 @@ export const syncWithAtlas = async (): Promise<void> => {
           });
         } else {
           // Add new inspection
+          // Generate a robust numeric ID to avoid collisions
+          const uniqueId = inspectionData.localId || Date.now() + Math.floor(Math.random() * 1e9);
           await db.inspections.add({
             ...inspectionData,
-            id: inspectionData.localId || Date.now() + Math.floor(Math.random() * 1000),
+            id: uniqueId,
             mongoId: _id,
             synced: true,
             locallyModified: false,

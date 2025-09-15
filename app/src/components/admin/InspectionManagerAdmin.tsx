@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Container, Typography, Box, Paper, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Button,
+  TableContainer, TableHead, TableRow, TableCell, Button,
   TextField, FormControl, InputLabel, Select, MenuItem,
-  IconButton, Chip, CircularProgress, Snackbar, Alert,
+  Chip, CircularProgress, Snackbar, Alert,
   ThemeProvider, SelectChangeEvent
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -285,8 +285,6 @@ export const InspectionManagerAdmin: React.FC = () => {
         return;
       }
       
-      // Keep the first one (newest), delete the rest
-      const keepId = allInspections[0].id;
       const idsToDelete = allInspections
         .slice(1)
         .map(inspection => inspection.id);
@@ -389,9 +387,11 @@ export const InspectionManagerAdmin: React.FC = () => {
             updated++;
           } else {
             // Add new
+            // Generate a robust numeric ID to avoid collisions
+            const uniqueId = Date.now() + Math.floor(Math.random() * 1e9);
             await db.inspections.add({
               ...inspection,
-              id: Date.now() + Math.floor(Math.random() * 1000),
+              id: uniqueId,
               mongoId: inspection._id,
               synced: true,
               syncedAt: new Date().toISOString()
@@ -486,7 +486,7 @@ export const InspectionManagerAdmin: React.FC = () => {
               type="number"
               label="Count"
               value={countToGenerate}
-              onChange={(e) => setCountToGenerate(parseInt(e.target.value) || 1)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCountToGenerate(parseInt(e.target.value) || 1)}
               size="small"
               sx={{ width: 80, mr: 1 }}
               InputProps={{ inputProps: { min: 1, max: 100 } }}
@@ -553,7 +553,7 @@ export const InspectionManagerAdmin: React.FC = () => {
             variant="outlined"
             size="small"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             sx={{ width: { xs: '100%', sm: 300 } }}
           />
           
@@ -592,23 +592,23 @@ export const InspectionManagerAdmin: React.FC = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '32px' }}>
                     <CircularProgress />
                     <Typography variant="body2" sx={{ mt: 1 }}>
                       Loading inspections...
                     </Typography>
-                  </TableCell>
+                  </td>
                 </TableRow>
               ) : filteredAndSortedInspections.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '32px' }}>
                     <Typography variant="body1">No inspections found</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       {searchQuery ? 
                         'Try a different search term' : 
                         'Add some inspections to get started'}
                     </Typography>
-                  </TableCell>
+                  </td>
                 </TableRow>
               ) : (
                 filteredAndSortedInspections.map((inspection) => (

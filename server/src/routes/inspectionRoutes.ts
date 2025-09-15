@@ -115,9 +115,15 @@ router.post('/sync', async (req: Request, res: Response) => {
       );
       
       results.syncedIds.push(id);
-      if (result.upsertedId) {
-        results.mongoIds[id] = result.upsertedId.toString();
-      }
+        if (result.upsertedId) {
+          results.mongoIds[id] = result.upsertedId.toString();
+        } else {
+          // Fetch the _id for updated documents
+          const existingDoc = await db.collection('inspections').findOne({ localId: id });
+          if (existingDoc && existingDoc._id) {
+            results.mongoIds[id] = existingDoc._id.toString();
+          }
+        }
     }
     
     // 2. Get server inspections updated since last sync
