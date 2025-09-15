@@ -19,11 +19,13 @@ export const syncWithAtlas = async (): Promise<void> => {
     
     // 1. Get all local inspections from IndexedDB
     const localInspections = await db.inspections.toArray();
-    
+    // Filter unsynced or locally modified inspections once
+    const unsyncedInspections = localInspections.filter(i => !i.synced || i.locallyModified);
+
     // 2. Get last sync timestamp
     const settings = await db.settings.get('syncSettings');
     const lastSyncTimestamp = settings?.lastSyncTimestamp || null;
-    
+
     // 3. Push to server and get server updates
     const response = await fetch('/api/inspections/sync', {
       method: 'POST',
@@ -31,7 +33,7 @@ export const syncWithAtlas = async (): Promise<void> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        inspections: localInspections.filter(i => !i.synced || i.locallyModified),
+        inspections: unsyncedInspections,
         lastSyncTimestamp
       }),
     });

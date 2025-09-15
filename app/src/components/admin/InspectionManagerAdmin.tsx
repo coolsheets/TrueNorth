@@ -387,8 +387,8 @@ export const InspectionManagerAdmin: React.FC = () => {
             updated++;
           } else {
             // Add new
-            // Generate a robust numeric ID to avoid collisions
-            const uniqueId = Date.now() + Math.floor(Math.random() * 1e9);
+            // Use UUID for primary key
+            const uniqueId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
             await db.inspections.add({
               ...inspection,
               id: uniqueId,

@@ -74,10 +74,11 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       );
       
       results.syncedIds.push(id);
-      // Use doc._id 
-      if (result?._id) {
-        results.mongoIds[id] = result._id.toString();
+      if (!result) {
+        console.error(`Failed to upsert inspection with localId ${id}`);
+        return res.status(500).json({ error: `Failed to upsert inspection with localId ${id}` });
       }
+      results.mongoIds[id] = result._id.toString();
     }
     
     // 2. Get server inspections updated since last sync
