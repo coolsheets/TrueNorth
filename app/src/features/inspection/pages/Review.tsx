@@ -18,7 +18,7 @@ import {
 import Card from "../../../components/Card";
 import { db, type InspectionDraft, type SectionState } from "../db";
 import { sections as templateSections } from "../schema";
-import { generateLocalAiReview } from "../utils/localAi";
+import { generateLocalAiReview, type AiReviewResult } from "../../../utils/localAiReview";
 import { useOfflineStatus } from "../../../utils/offlineStatus";
 
 // Helper function to get status color
@@ -41,6 +41,24 @@ const getStatusText = (status: string) => {
   }
 };
 
+// Helper function to normalize AI summary data
+const normalizeAiSummary = (data: any): AiReviewResult => {
+  const adjustments = (data.suggestedAdjustments || []).map((adj: any) => {
+    if (typeof adj === 'string') {
+      return { label: adj, cost: 0 };
+    }
+    return {
+      label: adj.label || adj.issue || 'Unknown adjustment',
+      cost: adj.cost || adj.estRepairCostCAD || 0,
+    };
+  });
+
+  return {
+    ...data,
+    suggestedAdjustments: adjustments,
+  };
+};
+
 export default function Review() {
   const [params] = useSearchParams();
   const nav = useNavigate();
@@ -48,7 +66,7 @@ export default function Review() {
   const [draft, setDraft] = useState<InspectionDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [summarizing, setSummarizing] = useState(false);
-  const [summary, setSummary] = useState<any | null>(null);
+  const [summary, setSummary] = useState<AiReviewResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [useLocalAi, setUseLocalAi] = useState(false);
   const isOffline = useOfflineStatus();
@@ -120,7 +138,7 @@ const generateSummary = async () => {
         });
         
         const localSummary = generateLocalAiReview(vehicle, sections);
-        setSummary(localSummary);
+        setSummary(normalizeAiSummary(localSummary));
       } else {
         // Use remote AI service with local fallback
         try {
@@ -147,7 +165,7 @@ const generateSummary = async () => {
           }
           
           const data = await response.json();
-          setSummary(data);
+          setSummary(normalizeAiSummary(data));
         } catch (error) {
           // Check if it's an AbortError (timeout)
           const isTimeout = error instanceof Error && error.name === 'AbortError';
@@ -159,7 +177,7 @@ const generateSummary = async () => {
           }
           
           const localSummary = generateLocalAiReview(draft.vehicle, draft.sections);
-          setSummary(localSummary);
+          setSummary(normalizeAiSummary(localSummary));
         }
       }
     } catch (err) {
@@ -396,9 +414,9 @@ const generateSummary = async () => {
                   <>
                     <Typography variant="h6" sx={{ mt: 2 }}>Suggested Negotiation Points:</Typography>
                     <List>
-                      {summary.suggestedAdjustments.map((adj: string, index: number) => (
+                      {summary.suggestedAdjustments.map((adj: { label: string, cost: number }, index: number) => (
                         <ListItem key={index}>
-                          <ListItemText primary={adj} />
+                          <ListItemText primary={`${adj.label}: -$${adj.cost}`} />
                         </ListItem>
                       ))}
                     </List>
