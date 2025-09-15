@@ -62,6 +62,34 @@ cd ~/Documents/Projects/TrueNorth/app
 npx serve -s dist
 ```
 
+## Service Worker Database Connection Issues
+
+If your service worker can't connect to the IndexedDB database:
+
+1. **Check for scope errors**: The most common error looks like:
+   ```
+   Failed to register a ServiceWorker for scope ('https://localhost:3000/') 
+   with script ('https://localhost:3000/dev-dist/sw.js'). 
+   The path of the provided scope ('/') is not under the max scope allowed ('/dev-dist/')
+   ```
+
+2. **Use the fix script**:
+   ```bash
+   cd ~/Documents/Projects/TrueNorth/app
+   ./fix-service-worker.sh
+   ```
+   This script sets up a server with the proper `Service-Worker-Allowed` header.
+
+3. **Access the troubleshooting documentation**:
+   - See [SERVICE_WORKER_DB_CONNECTION_FIX.md](./SERVICE_WORKER_DB_CONNECTION_FIX.md) for detailed fix instructions
+   - See [SERVICE_WORKER_QUICK_REF.md](./SERVICE_WORKER_QUICK_REF.md) for a quick reference guide
+
+4. **Run the diagnostic tool**:
+   ```bash
+   cd ~/Documents/Projects/TrueNorth/app
+   ./troubleshoot-sw-db.sh
+   ```
+
 ## PWA Configuration Checklist
 
 - [ ] `manifest.webmanifest` has correct icon paths and start_url
@@ -70,6 +98,7 @@ npx serve -s dist
 - [ ] Icons are available in the correct size and format
 - [ ] Service worker navigateFallback and caching strategies are correctly configured
 - [ ] HTTPS is properly set up for local development
+- [ ] Service worker has proper scope permissions (use fix-service-worker.sh for dev)
 
 ## Manual Browser Cleanup
 
