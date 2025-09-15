@@ -43,10 +43,16 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       return res.status(400).json({ error: 'Expected an array of inspections' });
     }
     
+    interface ServerInspection {
+      _id: string;
+      localId?: number;
+      [key: string]: unknown;
+    }
+    
     const results = {
       syncedIds: [] as number[],
       mongoIds: {} as Record<number, string>,
-      serverInspections: [] as any[]
+      serverInspections: [] as ServerInspection[]
     };
     
     // 1. Push local inspections to server
@@ -64,20 +70,18 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       const result = await Inspection.findOneAndUpdate(
         { localId: id },
         formattedData,
-        { upsert: true, new: true, rawResult: true }
+        { upsert: true, new: true }
       );
       
       results.syncedIds.push(id);
-      // Use upsertedId if a new document was created, otherwise use doc._id
-      if (result?.lastErrorObject?.upserted) {
-        results.mongoIds[id] = result.lastErrorObject.upserted.toString();
-      } else if (result?.value?._id) {
-        results.mongoIds[id] = result.value._id.toString();
+      // Use doc._id 
+      if (result?._id) {
+        results.mongoIds[id] = result._id.toString();
       }
     }
     
     // 2. Get server inspections updated since last sync
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     if (lastSyncTimestamp) {
       query.updatedAt = { $gt: new Date(lastSyncTimestamp) };
     }
@@ -88,7 +92,15 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
     }
     
     const serverInspections = await Inspection.find(query).sort({ updatedAt: -1 });
-    results.serverInspections = serverInspections;
+    
+    // Convert MongoDB documents to plain objects with string IDs
+    results.serverInspections = serverInspections.map(doc => {
+      const plainDoc = doc.toObject();
+      return {
+        ...plainDoc,
+        _id: plainDoc._id.toString()
+      };
+    });
     
     res.json(results);
   } catch (error) {

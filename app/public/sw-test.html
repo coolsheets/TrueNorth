@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Worker Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    button {
+      padding: 10px;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Service Worker Registration Test</h1>
+  <p>This page tests if the service worker is registering correctly with the fixed configuration.</p>
+  
+  <div>
+    <h2>1. Service Worker Registration</h2>
+    <div id="registration-status">Checking registration status...</div>
+    <pre id="registration-details"></pre>
+  </div>
+
+  <div>
+    <h2>2. Database Access Test</h2>
+    <div id="db-status">Testing database access...</div>
+    <pre id="db-details"></pre>
+    <button id="test-db-btn">Test IndexedDB Access</button>
+  </div>
+
+  <script>
+    // Test service worker registration
+    async function checkServiceWorker() {
+      const regStatus = document.getElementById('registration-status');
+      const regDetails = document.getElementById('registration-details');
+      
+      try {
+        if (!('serviceWorker' in navigator)) {
+          throw new Error('Service Worker API not available');
+        }
+        
+        // Check existing registrations
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        
+        let detailsText = `Found ${registrations.length} service worker registrations\n`;
+        
+        registrations.forEach(reg => {
+          detailsText += `- Scope: ${reg.scope}\n`;
+          detailsText += `- State: ${reg.active ? 'Active' : (reg.installing ? 'Installing' : 'Waiting')}\n`;
+          detailsText += `- Mode: ${reg.active?.state || 'N/A'}\n\n`;
+        });
+        
+        if (registrations.length > 0) {
+          const correctScope = registrations.some(reg => reg.scope.includes('/'));
+          if (correctScope) {
+            regStatus.textContent = '✅ Service Worker registered with correct scope';
+            regStatus.className = 'success';
+          } else {
+            regStatus.textContent = '⚠️ Service Worker registered but with wrong scope';
+            regStatus.className = 'error';
+          }
+        } else {
+          // Try to register a service worker
+          detailsText += "No existing registration. Attempting to register...\n";
+          
+          try {
+            const swPath = 'dev-dist/sw.js';
+            const registration = await navigator.serviceWorker.register(swPath, { scope: '/' });
+            detailsText += `Successfully registered service worker with scope: ${registration.scope}\n`;
+            regStatus.textContent = '✅ Service Worker registered successfully';
+            regStatus.className = 'success';
+          } catch (err) {
+            detailsText += `Failed to register service worker: ${err.message}\n`;
+            regStatus.textContent = '❌ Service Worker registration failed';
+            regStatus.className = 'error';
+          }
+        }
+        
+        regDetails.textContent = detailsText;
+      } catch (err) {
+        regStatus.textContent = `❌ Error: ${err.message}`;
+        regStatus.className = 'error';
+        regDetails.textContent = err.stack;
+      }
+    }
+    
+    // Test IndexedDB access
+    async function testDatabase() {
+      const dbStatus = document.getElementById('db-status');
+      const dbDetails = document.getElementById('db-details');
+      
+      try {
+        // Check if IndexedDB is supported
+        if (!window.indexedDB) {
+          throw new Error('IndexedDB not supported in this browser');
+        }
+        
+        dbDetails.textContent = 'Opening test database...\n';
+        
+        // Open a test database
+        const request = indexedDB.open('sw-test-db', 1);
+        
+        // Create object store when needed
+        request.onupgradeneeded = event => {
+          dbDetails.textContent += 'Creating object store...\n';
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('test-store')) {
+            db.createObjectStore('test-store', { keyPath: 'id' });
+          }
+        };
+        
+        // Handle success
+        request.onsuccess = event => {
+          dbDetails.textContent += 'Database opened successfully\n';
+          const db = event.target.result;
+          
+          // Test writing data
+          const transaction = db.transaction(['test-store'], 'readwrite');
+          const store = transaction.objectStore('test-store');
+          
+          const testData = { id: Date.now(), text: 'Test data', timestamp: new Date().toISOString() };
+          const addRequest = store.add(testData);
+          
+          addRequest.onsuccess = () => {
+            dbDetails.textContent += 'Data written successfully\n';
+            dbDetails.textContent += JSON.stringify(testData, null, 2);
+            
+            dbStatus.textContent = '✅ Database access working correctly';
+            dbStatus.className = 'success';
+          };
+          
+          addRequest.onerror = err => {
+            dbDetails.textContent += `Error writing data: ${err.target.error}\n`;
+            dbStatus.textContent = '❌ Database write failed';
+            dbStatus.className = 'error';
+          };
+          
+          transaction.oncomplete = () => {
+            db.close();
+            dbDetails.textContent += 'Database connection closed\n';
+          };
+        };
+        
+        // Handle errors
+        request.onerror = event => {
+          dbDetails.textContent += `Database error: ${event.target.error}\n`;
+          dbStatus.textContent = '❌ Failed to open database';
+          dbStatus.className = 'error';
+        };
+      } catch (err) {
+        dbStatus.textContent = `❌ Error: ${err.message}`;
+        dbStatus.className = 'error';
+        dbDetails.textContent = err.stack;
+      }
+    }
+    
+    // Run tests
+    document.addEventListener('DOMContentLoaded', () => {
+      checkServiceWorker();
+      document.getElementById('test-db-btn').addEventListener('click', testDatabase);
+    });
+  </script>
+</body>
+</html>
