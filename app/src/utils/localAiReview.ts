@@ -23,13 +23,18 @@ interface InspectionSection {
   items: InspectionItem[];
 }
 
-interface AiReviewResult {
+interface Adjustment {
+  label: string;
+  cost: number;
+}
+
+export interface AiReviewResult {
   summary: string;
   redFlags: string[];
   yellowFlags: string[];
   greenNotes: string[];
   estRepairTotalCAD: number;
-  suggestedAdjustments: string[];
+  suggestedAdjustments: Adjustment[];
   inspectionScore: number;
 }
 
@@ -73,16 +78,18 @@ export const generateLocalAiReview = (
         // Add repair cost estimate for known expensive items
         if (REPAIR_COSTS[item.id]) {
           result.estRepairTotalCAD += REPAIR_COSTS[item.id].cost;
-          result.suggestedAdjustments.push(
-            `${REPAIR_COSTS[item.id].label}: -$${REPAIR_COSTS[item.id].cost}`
-          );
+          result.suggestedAdjustments.push({
+            label: REPAIR_COSTS[item.id].label,
+            cost: REPAIR_COSTS[item.id].cost
+          });
         }
         
         // Critical system failures should be highlighted
         if (CRITICAL_SYSTEMS.includes(item.id)) {
-          result.suggestedAdjustments.push(
-            `Consider if ${item.label?.toLowerCase() || item.id} issue is worth repairing`
-          );
+          result.suggestedAdjustments.push({
+            label: `Consider if ${item.label?.toLowerCase() || item.id} issue is worth repairing`,
+            cost: 0
+          });
         }
       } else if (item.status === 'warn') {
         warnCount++;
@@ -92,9 +99,10 @@ export const generateLocalAiReview = (
         if (REPAIR_COSTS[item.id]) {
           const warningCost = Math.round(REPAIR_COSTS[item.id].cost * 0.4);
           result.estRepairTotalCAD += warningCost;
-          result.suggestedAdjustments.push(
-            `${REPAIR_COSTS[item.id].label} (minor): -$${warningCost}`
-          );
+          result.suggestedAdjustments.push({
+            label: `${REPAIR_COSTS[item.id].label} (minor)`,
+            cost: warningCost
+          });
         }
       } else if (item.status === 'ok') {
         okCount++;

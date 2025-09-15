@@ -10,6 +10,7 @@ import RoadTest from './features/inspection/pages/RoadTest';
 import PostDrive from './features/inspection/pages/PostDrive';
 import Review from './features/inspection/pages/Review';
 import Export from './features/inspection/pages/Export';
+import InspectionManagerAdmin from './components/admin/InspectionManagerAdmin';
 
 export default function Routes(){
   return useRoutes([
@@ -24,6 +25,7 @@ export default function Routes(){
   { path: '/road', element: <RoadTest /> },
   { path: '/post', element: <PostDrive /> },
   { path: '/review', element: <Review /> },
-  { path: '/export', element: <Export /> }
+  { path: '/export', element: <Export /> },
+  { path: '/admin/inspections', element: <InspectionManagerAdmin /> }
   ]);
 }

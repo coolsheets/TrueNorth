@@ -29,7 +29,8 @@ r.post('/summarize', async (req: express.Request, res: express.Response) => {
 
 
   const out = resp.choices[0]?.message?.content || '{}';
-  res.json(JSON.parse(out));
+  const cleanedOut = out.replace(/```json/g, '').replace(/```/g, '').trim();
+  res.json(JSON.parse(cleanedOut));
 });
 
 /**

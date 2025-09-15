@@ -156,14 +156,15 @@ export default defineConfig({
           }
         ],
         additionalManifestEntries: [
-          { url: `${base}icons/icon-192.png`, revision: null },
-          { url: `${base}icons/icon-512.png`, revision: null }
         ]
       }
     })
   ],
   server: {
     port: 3000,
+      proxy: {
+        '/api': 'http://localhost:3000'
+      },
     https: (() => {
       // Only use HTTPS if certificates exist (local development)
       try {

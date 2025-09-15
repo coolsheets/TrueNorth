@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="pwa-capable" content="no">
+    <!-- Explicitly try to disable service workers for this page -->
+    <meta name="service-worker-allowed" content="false">
+    <title>TrueNorth Admin - Inspection Manager</title>
+    <script src="sw-admin-utils.js"></script>
+    <style>
+        :root {
+            --admin-primary: #2c3e50;
+            --admin-secondary: #34495e;
+            --admin-accent: #3498db;
+            --admin-accent-hover: #2980b9;
+            --admin-success: #2ecc71;
+            --admin-warning: #f39c12;
+            --admin-danger: #e74c3c;
+            --admin-light: #ecf0f1;
+            --admin-dark: #2c3e50;
+            --admin-text: #333;
+            --admin-text-light: #ecf0f1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f7fa;
+            color: var(--admin-text);
+        }
+        
+        h1, h2, h3 {
+            color: var(--admin-primary);
+            padding-bottom: 10px;
+        }
+        
+        h1 {
+            border-bottom: 2px solid var(--admin-accent);
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: var(--admin-accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--admin-accent-hover);
+        }
+        
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        #inspection-count {
+            font-weight: bold;
+            color: var(--admin-accent);
+        }
+        
+        /* Button variants */
+        .btn-primary {
+            background-color: var(--admin-accent);
+        }
+        .btn-primary:hover {
+            background-color: var(--admin-accent-hover);
+        }
+        .btn-success {
+            background-color: var(--admin-success);
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-danger {
+            background-color: var(--admin-danger);
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-warning {
+            background-color: var(--admin-warning);
+        }
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+        .btn-secondary {
+            background-color: var(--admin-secondary);
+        }
+        .btn-secondary:hover {
+            background-color: #2c3e50;
+        }
+        
+        /* Admin toolbar */
+        .admin-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--admin-light);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* Table styles */
+        #table-container {
+            margin: 20px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: var(--admin-light);
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+        
+        .sort-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--admin-primary);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-completed {
+            background-color: var(--admin-success);
+            color: white;
+        }
+        
+        .status-in-progress {
+            background-color: var(--admin-warning);
+            color: white;
+        }
+        
+        .status-synced {
+            background-color: var(--admin-accent);
+            color: white;
+        }
+        
+        .status-unsynced {
+            background-color: var(--admin-danger);
+            color: white;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        
+        /* Detail view */
+        #detail-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        #detail-view.hidden {
+            display: none;
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px 20px;
+            background-color: var(--admin-primary);
+            color: white;
+        }
+        
+        .detail-header h2 {
+            color: white;
+            margin: 0;
+        }
+        
+        #detail-content {
+            width: 80%;
+            max-width: 1000px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .section-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--admin-primary);
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .section-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 10px;
+        }
+        
+        .item-card {
+            background-color: white;
+            border-radius: 4px;
+            padding: 10px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .item-ok {
+            border-left-color: var(--admin-success);
+        }
+        
+        .item-warn {
+            border-left-color: var(--admin-warning);
+        }
+        
+        .item-fail {
+            border-left-color: var(--admin-danger);
+        }
+        
+        .item-na {
+            border-left-color: #aaa;
+        }
+        
+        .vehicle-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-card {
+            background-color: var(--admin-light);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: var(--admin-primary);
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+        }
+        
+        /* Sync controls */
+        .sync-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .connection-status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            background-color: #ccc;
+            color: white;
+        }
+        
+        .connection-status.online {
+            background-color: var(--admin-success);
+        }
+        
+        .connection-status.offline {
+            background-color: var(--admin-danger);
+        }
+        
+        .connection-status.checking {
+            background-color: var(--admin-warning);
+        }
+    </style>
+</head>
+<body>
+    <h1>TrueNorth Admin - Inspection Manager</h1>
+    
+    <div class="admin-toolbar">
+        <button id="list-btn" class="btn-primary">Refresh Inspections</button>
+        <button id="add-btn" class="btn-success">
+            <span>Add New Inspections</span>
+            <input type="number" id="count-input" min="1" max="10" value="3" style="width: 50px; padding: 5px; margin-left: 5px;">
+        </button>
+        <button id="delete-btn" class="btn-danger">Delete All But Latest</button>
+        <div class="sync-controls">
+            <button id="sync-btn" class="btn-warning">Push to Atlas</button>
+            <button id="fetch-btn" class="btn-secondary">Fetch from Atlas</button>
+            <div class="connection-status" id="connection-status">Offline</div>
+        </div>
+    </div>
+    
+    <div id="table-container">
+        <div class="table-header">
+            <input type="text" id="filter-input" placeholder="Filter inspections..." class="filter-input">
+            <select id="sort-select" class="sort-select">
+                <option value="date-desc">Date (Newest First)</option>
+                <option value="date-asc">Date (Oldest First)</option>
+                <option value="make">Make (A-Z)</option>
+                <option value="status">Status</option>
+            </select>
+        </div>
+        <table id="inspections-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Vehicle</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Sync Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="inspections-table-body">
+                <tr>
+                    <td colspan="6">Loading inspections...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="detail-view" class="hidden">
+        <div class="detail-header">
+            <h2>Inspection Details</h2>
+            <button id="close-detail-btn" class="btn-secondary">Close</button>
+        </div>
+        <div id="detail-content"></div>
+    </div>
+    
+    <div id="status">
+        <p>Status will appear here...</p>
+    </div>
+    
+    <script>
+        // Store the database reference
+        let db = null;
+        let inspectionsCache = [];
+        
+        // Function to connect to the database
+        async function connectToDatabase() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>Connecting to database...</p>';
+            
+            try {
+                // Load Dexie directly via CDN if not available
+                if (!window.Dexie) {
+                    // Create and load the Dexie script
+                    return new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://unpkg.com/dexie@3.2.4/dist/dexie.js';
+                        script.onload = async () => {
+                            // Now that Dexie is loaded, continue
+                            db = new Dexie('ppi-canada');
+                            db.version(2).stores({ 
+                                drafts: '++id, updatedAt, completed, synced' 
+                            });
+                            
+                            // Test the connection
+                            await db.open();
+                            const count = await db.drafts.count();
+                            
+                            statusDiv.innerHTML = `<p>Connected to database. <span id="inspection-count">${count}</span> inspections found.</p>`;
+                            resolve(true);
+                        };
+                        script.onerror = () => {
+                            statusDiv.innerHTML = `<p>Error loading Dexie from CDN. Please try again.</p>`;
+                            resolve(false);
+                        };
+                        document.head.appendChild(script);
+                    });
+                }
+                
+                // Create a connection to the database
+                db = new Dexie('ppi-canada');
+                db.version(2).stores({ 
+                    drafts: '++id, updatedAt, completed, synced' 
+                });
+                
+                // Test the connection
+                await db.open();
+                
+                // Fix any records with undefined/null synced values
+                await fixUndefinedSyncedValues();
+                
+                const count = await db.drafts.count();
+                
+                statusDiv.innerHTML = `<p>Connected to database. <span id="inspection-count">${count}</span> inspections found.</p>`;
+                return true;
+            } catch (error) {
+                statusDiv.innerHTML = `<p>Error connecting to database: ${error.message}</p>
+                <p>Please make sure:</p>
+                <ul>
+                    <li>You are running this page from the same origin as the main application</li>
+                    <li>The main application has loaded and initialized the database</li>
+                    <li>You have enabled third-party cookies if running in a different context</li>
+                </ul>`;
+                return false;
+            }
+        }
+        
+        // Format date for display
+        function formatDate(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+        
+        // Fix records with undefined or null synced values
+        async function fixUndefinedSyncedValues() {
+            try {
+                const allInspections = await db.drafts.toArray();
+                const recordsToFix = allInspections.filter(insp => typeof insp.synced !== 'boolean');
+                
+                if (recordsToFix.length > 0) {
+                    console.log(`Fixing ${recordsToFix.length} records with undefined/null synced values`);
+                    
+                    for (const inspection of recordsToFix) {
+                        await db.drafts.update(inspection.id, {
+                            synced: false // Default to false for undefined/null values
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fixing undefined synced values:', error);
+            }
+        }
+        
+        // Get status label based on completion status
+        function getStatusLabel(inspection) {
+            if (inspection.completed) {
+                return '<span class="status-badge status-completed">Completed</span>';
+            } else {
+                return '<span class="status-badge status-in-progress">In Progress</span>';
+            }
+        }
+        
+        // Get sync status label
+        function getSyncStatusLabel(inspection) {
+            if (inspection.synced) {
+                return '<span class="status-badge status-synced">Synced</span>';
+            } else {
+                return '<span class="status-badge status-unsynced">Not Synced</span>';
+            }
+        }
+        
+        // Populate the table with inspection data
+        function populateTable(inspections) {
+            const tableBody = document.getElementById('inspections-table-body');
+            inspectionsCache = inspections;
+            
+            if (inspections.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6">No inspections found</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            inspections.forEach(inspection => {
+                const vehicle = inspection.vehicle || {};
+                html += `
+                <tr data-id="${inspection.id}">
+                    <td>${inspection.id}</td>
+                    <td>${vehicle.year || 'N/A'} ${vehicle.make || 'Unknown'} ${vehicle.model || 'Unknown'}</td>
+                    <td>${formatDate(inspection.updatedAt)}</td>
+                    <td>${getStatusLabel(inspection)}</td>
+                    <td>${getSyncStatusLabel(inspection)}</td>
+                    <td>
+                        <button class="action-btn btn-primary view-btn" data-id="${inspection.id}">View</button>
+                        <button class="action-btn btn-danger delete-btn" data-id="${inspection.id}">Delete</button>
+                    </td>
+                </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+            
+            // Add event listeners to the view buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    showDetailView(id);
+                });
+            });
+            
+            // Add event listeners to the delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    if (confirm(`Are you sure you want to delete inspection #${id}?`)) {
+                        await db.drafts.delete(id);
+                        refreshInspections();
+                    }
+                });
+            });
+        }
+        
+        // List all inspections
+        async function listAllInspections() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>Loading inspections...</p>';
+            
+            try {
+                if (!db) {
+                    const connected = await connectToDatabase();
+                    if (!connected) return;
+                }
+                
+                // Get all inspections
+                const inspections = await db.drafts.toArray();
+                
+                // Sort by updatedAt (newest first)
+                inspections.sort((a, b) => b.updatedAt - a.updatedAt);
+                
+                // Update the count
+                const count = inspections.length;
+                statusDiv.innerHTML = `<p><span id="inspection-count">${count}</span> inspections found.</p>`;
+                
+                // Populate the table
+                populateTable(inspections);
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p>Error listing inspections: ${error.message}</p>`;
+            }
+        }
+        
+        // Function to show the detail view for an inspection
+        async function showDetailView(id) {
+            try {
+                const inspection = await db.drafts.get(id);
+                if (!inspection) {
+                    alert('Inspection not found');
+                    return;
+                }
+                
+                const detailView = document.getElementById('detail-view');
+                const detailContent = document.getElementById('detail-content');
+                
+                // Generate HTML for the detail view
+                let html = `
+                    <div class="vehicle-info">
+                        <div class="info-card">
+                            <div class="info-label">Vehicle</div>
+                            <div class="info-value">${inspection.vehicle?.year || 'N/A'} ${inspection.vehicle?.make || 'Unknown'} ${inspection.vehicle?.model || 'Unknown'}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">VIN</div>
+                            <div class="info-value">${inspection.vehicle?.vin || 'N/A'}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Odometer</div>
+                            <div class="info-value">${inspection.vehicle?.odo ? inspection.vehicle.odo + ' km' : 'N/A'}</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label">Province</div>
+                            <div class="info-value">${inspection.vehicle?.province || 'N/A'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-label">Status</div>
+                        <div>${getStatusLabel(inspection)} ${getSyncStatusLabel(inspection)}</div>
+                        <div style="margin-top: 10px;">
+                            <div><strong>Created:</strong> ${formatDate(inspection.createdAt)}</div>
+                            <div><strong>Updated:</strong> ${formatDate(inspection.updatedAt)}</div>
+                            ${inspection.completedAt ? `<div><strong>Completed:</strong> ${formatDate(new Date(inspection.completedAt))}</div>` : ''}
+                            ${inspection.syncedAt ? `<div><strong>Synced:</strong> ${formatDate(new Date(inspection.syncedAt))}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <h3>Inspection Sections</h3>
+                `;
+                
+                // Add sections
+                if (inspection.sections && inspection.sections.length > 0) {
+                    inspection.sections.forEach(section => {
+                        html += `
+                        <div class="section-card">
+                            <div class="section-header">${section.slug.charAt(0).toUpperCase() + section.slug.slice(1)}</div>
+                            <div class="section-items">
+                        `;
+                        
+                        if (section.items && section.items.length > 0) {
+                            section.items.forEach(item => {
+                                html += `
+                                <div class="item-card item-${item.status}">
+                                    <div><strong>Item ID:</strong> ${item.id}</div>
+                                    <div><strong>Status:</strong> ${item.status.toUpperCase()}</div>
+                                    <div><strong>Notes:</strong> ${item.notes || 'No notes'}</div>
+                                </div>
+                                `;
+                            });
+                        } else {
+                            html += '<div>No items in this section</div>';
+                        }
+                        
+                        html += `
+                            </div>
+                        </div>
+                        `;
+                    });
+                } else {
+                    html += '<div>No sections found</div>';
+                }
+                
+                detailContent.innerHTML = html;
+                detailView.classList.remove('hidden');
+                
+            } catch (error) {
+                alert(`Error loading inspection details: ${error.message}`);
+            }
+        }
+        
+        // Function to close the detail view
+        function closeDetailView() {
+            const detailView = document.getElementById('detail-view');
+            detailView.classList.add('hidden');
+        }
+        
+        // Delete all but the latest inspection
+        async function deleteAllButLatest() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>Processing...</p>';
+            
+            try {
+                if (!db) {
+                    const connected = await connectToDatabase();
+                    if (!connected) return;
+                }
+                
+                // Get all inspections
+                const inspections = await db.drafts.toArray();
+                
+                // Sort by updatedAt (newest first)
+                inspections.sort((a, b) => b.updatedAt - a.updatedAt);
+                
+                if (inspections.length <= 1) {
+                    statusDiv.innerHTML = '<p>Only one or no inspections found. Nothing to delete.</p>';
+                    return;
+                }
+                
+                // Keep the latest inspection, delete others
+                const latestInspection = inspections[0];
+                let html = `<p>Kept latest inspection (ID: ${latestInspection.id}).</p>`;
+                html += '<p>Deleted inspections:</p><ul>';
+                
+                // Delete all other inspections
+                for (let i = 1; i < inspections.length; i++) {
+                    const inspection = inspections[i];
+                    await db.drafts.delete(inspection.id);
+                    html += `<li>ID: ${inspection.id} - ${inspection.vehicle?.make || 'Unknown'} ${inspection.vehicle?.model || 'Unknown'}</li>`;
+                }
+                
+                html += '</ul>';
+                html += '<p>Cleanup complete. All but the latest inspection have been deleted.</p>';
+                statusDiv.innerHTML = html;
+                
+                // Refresh the inspection table
+                refreshInspections();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p>Error during cleanup: ${error.message}</p>`;
+            }
+        }
+        
+        // Add new inspections
+        async function addNewInspections() {
+            const statusDiv = document.getElementById('status');
+            const countInput = document.getElementById('count-input');
+            const count = parseInt(countInput.value) || 3;
+            
+            statusDiv.innerHTML = `<p>Adding ${count} new inspection(s)...</p>`;
+            
+            try {
+                if (!db) {
+                    const connected = await connectToDatabase();
+                    if (!connected) return;
+                }
+                
+                // Sample vehicle data
+                const vehicles = [
+                    { 
+                        vin: '1HGCM82633A123456', 
+                        year: 2023, 
+                        make: 'Honda', 
+                        model: 'Accord', 
+                        odo: 12500,
+                        province: 'Ontario'
+                    },
+                    { 
+                        vin: '5XYZU3LB7DG123457', 
+                        year: 2022, 
+                        make: 'Hyundai', 
+                        model: 'Santa Fe', 
+                        odo: 8700,
+                        province: 'Alberta'
+                    },
+                    { 
+                        vin: '1C4RJFBG2MC123458', 
+                        year: 2021, 
+                        make: 'Jeep', 
+                        model: 'Grand Cherokee', 
+                        odo: 32100,
+                        province: 'British Columbia'
+                    },
+                    { 
+                        vin: 'WAUCFAFH1EN123459', 
+                        year: 2020, 
+                        make: 'Audi', 
+                        model: 'A4', 
+                        odo: 45600,
+                        province: 'Quebec'
+                    },
+                    { 
+                        vin: '2T3RFREV4EW123460', 
+                        year: 2019, 
+                        make: 'Toyota', 
+                        model: 'RAV4', 
+                        odo: 72300,
+                        province: 'Manitoba'
+                    }
+                ];
+                
+                // Create sample section data with different statuses
+                const createSampleSections = () => {
+                    const statuses = ['ok', 'warn', 'fail', 'na'];
+                    return [
+                        {
+                            slug: 'exterior',
+                            items: [
+                                { id: 'ext1', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for exterior item 1' },
+                                { id: 'ext2', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for exterior item 2' },
+                                { id: 'ext3', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for exterior item 3' }
+                            ]
+                        },
+                        {
+                            slug: 'interior',
+                            items: [
+                                { id: 'int1', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for interior item 1' },
+                                { id: 'int2', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for interior item 2' }
+                            ]
+                        },
+                        {
+                            slug: 'mechanical',
+                            items: [
+                                { id: 'mech1', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for mechanical item 1' },
+                                { id: 'mech2', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for mechanical item 2' },
+                                { id: 'mech3', status: statuses[Math.floor(Math.random() * 4)], notes: 'Sample note for mechanical item 3' }
+                            ]
+                        }
+                    ];
+                };
+                
+                // Add new inspections
+                const newInspections = [];
+                for (let i = 0; i < count; i++) {
+                    const vehicle = vehicles[i % vehicles.length];
+                    const now = Date.now() - (i * 24 * 60 * 60 * 1000); // Each inspection 1 day apart
+                    
+                    const inspection = {
+                        vehicle: { ...vehicle },
+                        sections: createSampleSections(),
+                        createdAt: now,
+                        updatedAt: now,
+                        completed: Math.random() > 0.5, // Randomly set as completed or not
+                        // Ensure synced is always a boolean value
+                        synced: Math.random() > 0.7 ? true : false, // Explicitly set as boolean
+                    };
+                    
+                    if (inspection.completed) {
+                        inspection.completedAt = new Date(now).toISOString();
+                    }
+                    
+                    if (inspection.synced) {
+                        inspection.syncedAt = new Date(now).toISOString();
+                    }
+                    
+                    const id = await db.drafts.add(inspection);
+                    newInspections.push({id, vehicle: inspection.vehicle});
+                }
+                
+                // Display results
+                let html = `<p>Added ${count} new inspections:</p><ul>`;
+                for (const inspection of newInspections) {
+                    html += `<li>ID: ${inspection.id} - ${inspection.vehicle.make} ${inspection.vehicle.model} (${inspection.vehicle.year})</li>`;
+                }
+                html += '</ul>';
+                statusDiv.innerHTML = html;
+                
+                // Refresh the inspection table
+                refreshInspections();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p>Error adding new inspections: ${error.message}</p>`;
+            }
+        }
+        
+        // Refresh inspections table
+        async function refreshInspections() {
+            try {
+                const count = await db.drafts.count();
+                if (document.getElementById('inspection-count')) {
+                    document.getElementById('inspection-count').textContent = count;
+                }
+                await listAllInspections();
+            } catch (error) {
+                console.error('Error refreshing inspections:', error);
+            }
+        }
+        
+        // Filter inspections based on search input
+        function filterInspections() {
+            const filterInput = document.getElementById('filter-input');
+            const searchTerm = filterInput.value.toLowerCase();
+            
+            if (!inspectionsCache || inspectionsCache.length === 0) {
+                return;
+            }
+            
+            // Filter inspections based on search term
+            const filteredInspections = inspectionsCache.filter(inspection => {
+                const vehicle = inspection.vehicle || {};
+                
+                // Search in multiple fields
+                return (
+                    (vehicle.make && vehicle.make.toLowerCase().includes(searchTerm)) ||
+                    (vehicle.model && vehicle.model.toLowerCase().includes(searchTerm)) ||
+                    (vehicle.vin && vehicle.vin.toLowerCase().includes(searchTerm)) ||
+                    (vehicle.province && vehicle.province.toLowerCase().includes(searchTerm)) ||
+                    (inspection.id && inspection.id.toString().includes(searchTerm))
+                );
+            });
+            
+            // Apply sorting
+            const sortSelect = document.getElementById('sort-select');
+            const sortedInspections = sortInspections(filteredInspections, sortSelect.value);
+            
+            // Update the table with filtered results
+            populateTable(sortedInspections);
+        }
+        
+        // Sort inspections based on selected option
+        function sortInspections(inspections, sortOption) {
+            let sortedInspections = [...inspections];
+            
+            switch(sortOption) {
+                case 'date-desc':
+                    sortedInspections.sort((a, b) => b.updatedAt - a.updatedAt);
+                    break;
+                case 'date-asc':
+                    sortedInspections.sort((a, b) => a.updatedAt - b.updatedAt);
+                    break;
+                case 'make':
+                    sortedInspections.sort((a, b) => {
+                        const makeA = (a.vehicle?.make || '').toLowerCase();
+                        const makeB = (b.vehicle?.make || '').toLowerCase();
+                        return makeA.localeCompare(makeB);
+                    });
+                    break;
+                case 'status':
+                    sortedInspections.sort((a, b) => {
+                        // Sort by completed first, then by synced
+                        if (a.completed !== b.completed) {
+                            return a.completed ? -1 : 1;
+                        }
+                        return a.synced ? -1 : 1;
+                    });
+                    break;
+                default:
+                    break;
+            }
+            
+            return sortedInspections;
+        }
+        
+        // Define API URL based on current protocol
+        function getApiBaseUrl() {
+            // Try both HTTP and HTTPS versions based on what works
+            return 'http://localhost:3000'; // Default API URL
+        }
+        
+        // Sync with Atlas database
+        async function syncWithAtlas() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>Attempting to sync with Atlas database...</p>';
+            
+            try {
+                // Get unsynced inspections - handle both false and undefined/null values
+                // Use filter() with a collection to avoid IDBKeyRange issues with null/undefined values
+                const allInspections = await db.drafts.toArray();
+                const unsynced = allInspections.filter(insp => insp.synced !== true);
+                
+                if (unsynced.length === 0) {
+                    statusDiv.innerHTML = '<p>All inspections are already synced.</p>';
+                    return;
+                }
+                
+                // Format inspections for the API
+                const inspectionsToSync = unsynced.map(inspection => ({
+                    ...inspection,
+                    localId: inspection.id // Keep reference to local ID
+                }));
+                
+                // Send to API
+                const apiUrl = `${getApiBaseUrl()}/api/inspections/sync`;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ inspections: inspectionsToSync })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                // Update local inspections with sync status
+                for (const syncResult of result.results) {
+                    await db.drafts.update(syncResult.localId, {
+                        synced: true,
+                        syncedAt: new Date().toISOString(),
+                        mongoId: syncResult._id // Store MongoDB ID for future reference
+                    });
+                }
+                
+                let html = `<p>Successfully synced ${result.results.length} inspections with Atlas database.</p>`;
+                html += `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                statusDiv.innerHTML = html;
+                
+                // Refresh the inspection table
+                refreshInspections();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p>Error syncing with Atlas: ${error.message}</p>
+                <p>Please make sure:</p>
+                <ul>
+                    <li>The inspection API server is running (use start-inspection-api.sh)</li>
+                    <li>You are online and connected to the network</li>
+                    <li>The MongoDB Atlas connection string in .env is correct</li>
+                </ul>`;
+            }
+        }
+        
+        // Fetch inspections from MongoDB Atlas
+        async function fetchFromAtlas() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>Fetching inspections from Atlas database...</p>';
+            
+            try {
+                // Fetch from API
+                const apiUrl = `${getApiBaseUrl()}/api/inspections`;
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const atlasInspections = await response.json();
+                
+                if (atlasInspections.length === 0) {
+                    statusDiv.innerHTML = '<p>No inspections found in Atlas database.</p>';
+                    return;
+                }
+                
+                let html = `<p>Found ${atlasInspections.length} inspections in Atlas database.</p>`;
+                
+                // Check which ones don't exist locally or need updating
+                const localInspections = await db.drafts.toArray();
+                const localByMongoId = {};
+                
+                // Create a map of local inspections by their MongoDB ID
+                for (const local of localInspections) {
+                    if (local.mongoId) {
+                        localByMongoId[local.mongoId] = local;
+                    }
+                }
+                
+                let added = 0;
+                let updated = 0;
+                
+                // Process each Atlas inspection
+                for (const atlas of atlasInspections) {
+                    const local = localByMongoId[atlas._id];
+                    
+                    if (!local) {
+                        // Add new inspection to local DB
+                        const newInspection = {
+                            ...atlas,
+                            mongoId: atlas._id,
+                            synced: true,
+                            syncedAt: new Date().toISOString()
+                        };
+                        delete newInspection._id; // Remove MongoDB ID to avoid confusion with IndexedDB ID
+                        
+                        await db.drafts.add(newInspection);
+                        added++;
+                    } else if (new Date(atlas.updatedAt) > new Date(local.updatedAt)) {
+                        // Update local inspection if Atlas version is newer
+                        const updatedInspection = {
+                            ...atlas,
+                            id: local.id, // Preserve local ID
+                            mongoId: atlas._id,
+                            synced: true,
+                            syncedAt: new Date().toISOString()
+                        };
+                        delete updatedInspection._id; // Remove MongoDB ID
+                        
+                        await db.drafts.update(local.id, updatedInspection);
+                        updated++;
+                    }
+                }
+                
+                html += `<p>Added ${added} new inspections from Atlas.</p>`;
+                html += `<p>Updated ${updated} existing inspections from Atlas.</p>`;
+                statusDiv.innerHTML = html;
+                
+                // Refresh the inspection table
+                refreshInspections();
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p>Error fetching from Atlas: ${error.message}</p>
+                <p>Please make sure:</p>
+                <ul>
+                    <li>The inspection API server is running (use start-inspection-api.sh)</li>
+                    <li>You are online and connected to the network</li>
+                    <li>The MongoDB Atlas connection string in .env is correct</li>
+                </ul>`;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('list-btn').addEventListener('click', refreshInspections);
+        document.getElementById('delete-btn').addEventListener('click', deleteAllButLatest);
+        document.getElementById('add-btn').addEventListener('click', addNewInspections);
+        document.getElementById('sync-btn').addEventListener('click', syncWithAtlas);
+        document.getElementById('fetch-btn').addEventListener('click', fetchFromAtlas);
+        document.getElementById('close-detail-btn').addEventListener('click', closeDetailView);
+        
+        // Filtering and sorting event listeners
+        document.getElementById('filter-input').addEventListener('input', filterInspections);
+        document.getElementById('sort-select').addEventListener('change', () => {
+            filterInspections(); // Reapply filter with new sorting
+        });
+        
+        // Monitor online/offline status
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('connection-status');
+            
+            if (navigator.onLine) {
+                statusEl.textContent = 'Online';
+                statusEl.classList.add('online');
+                statusEl.classList.remove('offline');
+            } else {
+                statusEl.textContent = 'Offline';
+                statusEl.classList.add('offline');
+                statusEl.classList.remove('online');
+            }
+        }
+        
+        // Check connection to API server
+        async function checkApiConnection() {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.textContent = 'Checking...';
+            statusEl.classList.add('checking');
+            statusEl.classList.remove('online', 'offline');
+            
+            try {
+                const response = await fetch(`${getApiBaseUrl()}/api/inspections`, { 
+                    method: 'HEAD',
+                    timeout: 2000
+                });
+                
+                if (response.ok) {
+                    statusEl.textContent = 'API Connected';
+                    statusEl.classList.add('online');
+                    statusEl.classList.remove('offline', 'checking');
+                    return true;
+                } else {
+                    throw new Error('API server returned error');
+                }
+            } catch (error) {
+                statusEl.textContent = 'API Unavailable';
+                statusEl.classList.add('offline');
+                statusEl.classList.remove('online', 'checking');
+                console.error('API connection error:', error);
+                return false;
+            }
+        }
+        
+        // Add online/offline event listeners
+        window.addEventListener('online', () => {
+            updateConnectionStatus();
+            checkApiConnection();
+        });
+        
+        window.addEventListener('offline', updateConnectionStatus);
+        
+        // Initialize
+        connectToDatabase().then(() => {
+            refreshInspections();
+            updateConnectionStatus();
+            checkApiConnection();
+        });
+    </script>
+</body>
+</html>
