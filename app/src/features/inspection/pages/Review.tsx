@@ -42,20 +42,41 @@ const getStatusText = (status: string) => {
 };
 
 // Helper function to normalize AI summary data
-const normalizeAiSummary = (data: any): AiReviewResult => {
-  const adjustments = (data.suggestedAdjustments || []).map((adj: any) => {
+interface RawAiSummary {
+  summary?: string;
+  redFlags?: string[];
+  yellowFlags?: string[];
+  greenNotes?: string[];
+  estRepairTotalCAD?: number;
+  suggestedAdjustments?: (string | RawAdjustment)[];
+}
+
+interface RawAdjustment {
+  label?: string;
+  issue?: string;
+  cost?: number;
+  estRepairCostCAD?: number;
+}
+
+const normalizeAiSummary = (data: RawAiSummary): AiReviewResult => {
+  const adjustments = (data.suggestedAdjustments || []).map((adj) => {
     if (typeof adj === 'string') {
       return { label: adj, cost: 0 };
     }
     return {
-      label: adj.label || adj.issue || 'Unknown adjustment',
-      cost: adj.cost || adj.estRepairCostCAD || 0,
+      label: (adj as RawAdjustment).label || (adj as RawAdjustment).issue || 'Unknown adjustment',
+      cost: (adj as RawAdjustment).cost || (adj as RawAdjustment).estRepairCostCAD || 0,
     };
   });
 
   return {
-    ...data,
+    summary: typeof data.summary === 'string' ? data.summary : '',
+    redFlags: Array.isArray(data.redFlags) ? data.redFlags : [],
+    yellowFlags: Array.isArray(data.yellowFlags) ? data.yellowFlags : [],
+    greenNotes: Array.isArray(data.greenNotes) ? data.greenNotes : [],
+    estRepairTotalCAD: typeof data.estRepairTotalCAD === 'number' ? data.estRepairTotalCAD : 0,
     suggestedAdjustments: adjustments,
+    inspectionScore: typeof (data as { inspectionScore?: unknown }).inspectionScore === 'number' ? (data as { inspectionScore?: number }).inspectionScore! : 0,
   };
 };
 
@@ -176,7 +197,27 @@ const generateSummary = async () => {
             setError(`Request timed out after ${API_TIMEOUT_MS}ms. Using local AI fallback.`);
           }
           
-          const localSummary = generateLocalAiReview(draft.vehicle, draft.sections);
+          // Map SectionState[] to InspectionSection[] with name property
+          const safeVehicle = {
+            make: draft.vehicle.make || "Unknown",
+            model: draft.vehicle.model || "Unknown",
+            year: draft.vehicle.year || 0,
+            vin: draft.vehicle.vin || "Unknown",
+            odo: draft.vehicle.odo || 0,
+            province: draft.vehicle.province || "Unknown",
+            manufacturer: draft.vehicle.manufacturer || "Unknown",
+            tpmsType: draft.vehicle.tpmsType || "Unknown",
+            ...draft.vehicle
+          };
+          const safeSections = draft.sections.map(section => {
+            const templateSection = templateSections.find(ts => ts.slug === section.slug);
+            return {
+              name: templateSection?.name || section.slug || "Unknown",
+              slug: section.slug,
+              items: section.items
+            };
+          });
+          const localSummary = generateLocalAiReview(safeVehicle, safeSections);
           setSummary(normalizeAiSummary(localSummary));
         }
       }
