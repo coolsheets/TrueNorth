@@ -12,6 +12,7 @@ export default [
       'app/dev-dist/**', // Ignore service worker files completely since they're generated
       'scripts/start-secure.cjs', // Ignore CommonJS script file
       // Add any other patterns that were in your .eslintignore file
+        'app/vite.sw-dev.config.ts', // Ignore Vite SW dev config
     ]
   },
   ...tseslint.configs.recommended,
