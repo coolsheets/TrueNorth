@@ -156,7 +156,6 @@ export default defineConfig({
           }
         ],
         additionalManifestEntries: [
-          { url: `${base}icons/icon-512.png`, revision: null }
         ]
       }
     })
