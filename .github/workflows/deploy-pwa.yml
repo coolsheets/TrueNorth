@@ -31,12 +31,12 @@ jobs:
         run: |
           # Install root dependencies first
           npm ci
-          # Install app dependencies
+          # Install app dependencies (include dev deps so vite is available)
           cd app
-          npm ci
-          # Install server dependencies
+          npm ci --include=dev
+          # Install server dependencies (include dev deps)
           cd ../server
-          npm ci
+          npm ci --include=dev
           
       - name: Build PWA
         working-directory: ./app

@@ -32,12 +32,12 @@ jobs:
         run: |
           # First install root dependencies
           npm ci
-          # Then install app-specific dependencies
+          # Then install app-specific dependencies (include dev deps so vite is available)
           cd app
-          npm ci
-          # Also install server dependencies
+          npm ci --include=dev
+          # Also install server dependencies (include dev deps)
           cd ../server
-          npm ci
+          npm ci --include=dev
           
       - name: Build
         working-directory: ./app

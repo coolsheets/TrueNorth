@@ -18,7 +18,7 @@ jobs:
       
       - name: Install app dependencies
         working-directory: ./app
-        run: npm ci
+        run: npm ci --include=dev
           
       - name: Build PWA
         working-directory: ./app
