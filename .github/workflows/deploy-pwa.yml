@@ -40,7 +40,14 @@ jobs:
           
       - name: Build PWA
         working-directory: ./app
-        run: npm run build
+        run: |
+          echo "Node version: $(node -v)"
+          echo "npm version: $(npm -v)"
+          echo "Listing app/node_modules/.bin"
+          ls -la app/node_modules/.bin || true
+          echo "Trying npx vite --version"
+          npx vite --version || true
+          npm run build
           
       - name: Prepare for GitHub Pages
         working-directory: ./app/dist
