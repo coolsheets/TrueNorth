@@ -7,7 +7,20 @@ import ai from './routes/ai.js';
 
 
 const app = express();
-app.use(cors({ origin: env.allowedOrigin, credentials: true }));
+// Allow multiple origins by checking the incoming origin at runtime
+app.use(
+	cors({
+		origin: (incomingOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+			// If no origin (same-origin or non-browser request), allow
+			if (!incomingOrigin) return callback(null, true);
+			if (env.allowedOrigins.includes('*')) return callback(null, true);
+			if (env.allowedOrigins.includes(incomingOrigin)) return callback(null, true);
+			// Not allowed
+			return callback(new Error('Not allowed by CORS'));
+		},
+		credentials: true
+	})
+);
 app.use(express.json({ limit: '5mb' }));
 
 

@@ -65,30 +65,50 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       const { id, ...inspectionData } = inspection;
       
       // Convert local data to match the mongoose model structure
+      // Ensure we do not include localId in the $set payload (avoid conflicting update operators)
+      // Create a copy of inspectionData without localId to avoid conflicting updates
+      const inspectionDataNoLocal: Record<string, unknown> = { ...(inspectionData as Record<string, unknown>) };
+      if ('localId' in inspectionDataNoLocal) delete inspectionDataNoLocal.localId;
       const formattedData = {
-        ...inspectionData,
+        ...inspectionDataNoLocal,
         updatedAt: new Date()
       };
 
-      // Use $set / $setOnInsert to avoid strict mode upsert errors for fields not in schema
-      const update = {
-        $set: formattedData,
-        $setOnInsert: { localId: id, createdAt: new Date() }
-      };
+      // Previously used an `update` object for upserts; now we perform explicit find+update/create.
 
-      // Insert or update in MongoDB
-      const result = await Inspection.findOneAndUpdate(
-        { localId: id },
-        update,
-        { upsert: true, new: true }
-      );
-      
-      results.syncedIds.push(id);
-      if (!result) {
-        console.error(`Failed to upsert inspection with localId ${id}`);
-        return res.status(500).json({ error: `Failed to upsert inspection with localId ${id}` });
-      }
-      results.mongoIds[id] = result._id.toString();
+          // Instead of an upsert (which caused conflicting-update errors on localId),
+          // check for existing document and update or create explicitly.
+          // Load existing document (not lean) so we can modify and save the Mongoose document
+          const existing = await Inspection.findOne({ localId: id });
+          let savedDoc;
+          if (existing) {
+            // Debug: log existing doc id and localId
+            console.debug(`Sync: found existing inspection _id=${existing._id} localId=${existing.localId}`);
+
+            // Apply updates directly to the document fields (avoid using conflicting update operators)
+            for (const [key, value] of Object.entries(formattedData)) {
+              // don't overwrite _id or localId here
+              if (key === '_id' || key === 'localId') continue;
+              // @ts-ignore assign dynamic keys
+              existing[key] = value as any;
+            }
+            existing.updatedAt = new Date();
+
+            // Save the document (this uses Mongoose document save, no update operators)
+            savedDoc = await existing.save();
+          } else {
+            // Create a new document with localId set
+            const toCreate = { ...formattedData, localId: id, createdAt: new Date() } as Record<string, unknown>;
+            console.debug(`Sync: creating new inspection localId=${id} payloadKeys=${Object.keys(toCreate).join(',')}`);
+            savedDoc = await Inspection.create(toCreate);
+          }
+
+          results.syncedIds.push(id);
+          if (!savedDoc) {
+            console.error(`Failed to save inspection with localId ${id}`);
+            return res.status(500).json({ error: `Failed to save inspection with localId ${id}` });
+          }
+          results.mongoIds[id] = savedDoc._id.toString();
     }
     
     // 2. Get server inspections updated since last sync
@@ -109,7 +129,9 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       const plainDoc = doc.toObject();
       return {
         ...plainDoc,
-        _id: plainDoc._id.toString()
+        _id: plainDoc._id.toString(),
+        // Mongoose may return null for missing fields; normalize null -> undefined to match ServerInspection type
+        localId: plainDoc.localId ?? undefined
       };
     });
     

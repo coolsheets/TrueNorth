@@ -15,5 +15,10 @@ export const env = {
   region: process.env['CLOUD_REGION'] || '',
   // Make OpenAI key optional so server can start and provide clear errors when missing.
   openaiKey: process.env['OPENAI_API_KEY'] || undefined,
-  allowedOrigin: process.env['ALLOWED_ORIGIN'] || '*'
+  // Support multiple allowed origins via ALLOWED_ORIGINS (comma-separated) or legacy ALLOWED_ORIGIN
+  allowedOrigin: process.env['ALLOWED_ORIGIN'] || process.env['ALLOWED_ORIGINS'] || '*',
+  allowedOrigins: ((process.env['ALLOWED_ORIGINS'] || process.env['ALLOWED_ORIGIN'] || '*')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean))
 };
