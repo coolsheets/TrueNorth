@@ -33,11 +33,11 @@ jobs:
           git log -1 --pretty=oneline || true
 
           echo "---- Actions / Env ----"
-          echo "GITHUB_REF=${GITHUB_REF:-}") || true
-          echo "GITHUB_SHA=${GITHUB_SHA:-}") || true
-          echo "GITHUB_ACTOR=${GITHUB_ACTOR:-}") || true
-          echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-}") || true
-          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-}") || true
+          echo "GITHUB_REF=${GITHUB_REF:-}" || true
+          echo "GITHUB_SHA=${GITHUB_SHA:-}" || true
+          echo "GITHUB_ACTOR=${GITHUB_ACTOR:-}" || true
+          echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-}" || true
+          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-}" || true
 
           echo "---- Node / NPM / PATH ----"
           node -v || true
