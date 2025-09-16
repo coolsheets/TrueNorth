@@ -44,7 +44,8 @@ jobs:
           npm -v || true
           which node || true
           which npm || true
-          echo "NODE_PATH=$(node -e \"console.log(process.env.NODE_PATH||'')\")" || true
+          # Use node -p with single quotes to avoid nested double-quote conflicts inside the YAML run block
+          echo "NODE_PATH=$(node -p 'process.env.NODE_PATH||""')" || true
           echo "PATH=$PATH"
           npm config ls -l || true
 
