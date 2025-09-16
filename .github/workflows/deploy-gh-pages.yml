@@ -23,6 +23,50 @@ jobs:
           git fetch origin main
           git checkout main
           git reset --hard origin/main
+      - name: Preflight diagnostics
+        run: |
+          set -x
+          echo "---- Git info ----"
+          git status --porcelain || true
+          git rev-parse --abbrev-ref HEAD || true
+          git rev-parse HEAD || true
+          git log -1 --pretty=oneline || true
+
+          echo "---- Actions / Env ----"
+          echo "GITHUB_REF=${GITHUB_REF:-}") || true
+          echo "GITHUB_SHA=${GITHUB_SHA:-}") || true
+          echo "GITHUB_ACTOR=${GITHUB_ACTOR:-}") || true
+          echo "GITHUB_EVENT_NAME=${GITHUB_EVENT_NAME:-}") || true
+          echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE:-}") || true
+
+          echo "---- Node / NPM / PATH ----"
+          node -v || true
+          npm -v || true
+          which node || true
+          which npm || true
+          echo "NODE_PATH=$(node -e \"console.log(process.env.NODE_PATH||'')\")" || true
+          echo "PATH=$PATH"
+          npm config ls -l || true
+
+          echo "---- Package & lockfile summaries ----"
+          jq -r '.name+"@"+.version' package.json || true
+          sed -n '1,120p' package.json || true
+          sed -n '1,120p' app/package.json || true
+          if [ -f package-lock.json ]; then sha1sum package-lock.json || true; fi
+          if [ -f app/package-lock.json ]; then sha1sum app/package-lock.json || true; fi
+
+          echo "---- node_modules layout (top-level and app) ----"
+          ls -la || true
+          ls -la node_modules || true
+          ls -la app || true
+          ls -la app/node_modules || true
+          ls -la server/node_modules || true
+
+          echo "---- npm global/workspace listing (top-level) ----"
+          npm ls --depth=0 || true
+          echo "---- npm workspace (app) ----"
+          npm --workspace=app ls --depth=0 || true
+          set +x
         
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -103,6 +147,34 @@ jobs:
             echo "❌ app/dist directory does not exist"
             exit 1
           fi
+      - name: Pre-deploy cleanup & diagnostics
+        run: |
+          set -x
+          echo "---- git / worktree diagnostics ----"
+          git --version || true
+          git status --porcelain -b || true
+          echo "Current git worktrees:" || true
+          git worktree list || true
+          echo "Listing runner workspace root:" || true
+          ls -la || true
+          echo "Looking for temp deployment folder used by action (if present)" || true
+          TMPFOLDER="github-pages-deploy-action-temp-deployment-folder"
+          if [ -d "$TMPFOLDER" ]; then
+            echo "$TMPFOLDER exists. Showing details:" || true
+            ls -la "$TMPFOLDER" || true
+            echo "Attempting to fix permissions and remove the folder to avoid git worktree errors" || true
+            chmod -R +rw "$TMPFOLDER" || true
+            rm -rf "$TMPFOLDER" || true
+            # If git still thinks the worktree exists, prune and try to remove again
+            git worktree prune || true
+            git worktree list || true
+          else
+            echo "$TMPFOLDER not present; nothing to remove" || true
+          fi
+          echo "Show refs/branches pointing at gh-pages (if any)" || true
+          git show-ref --heads | grep gh-pages || true
+          echo "---- end pre-deploy diagnostics ----"
+          set +x
           
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
