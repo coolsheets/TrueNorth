@@ -36,9 +36,19 @@ r.post('/summarize', async (req: express.Request, res: express.Response) => {
     const cleanedOut = out.replace(/```json/g, '').replace(/```/g, '').trim();
     res.json(JSON.parse(cleanedOut));
   } catch (err) {
-    // Don't log secrets; log the fact of the error and include safe diagnostics.
-    console.error('OpenAI API request failed:', (err && err.message) || err);
-    return res.status(502).json({ error: 'Online AI request failed', details: (err && err.message) || String(err) });
+    // Type-safe extraction of message from unknown error (avoid leaking secrets)
+    function extractMessage(e: unknown): string {
+      if (!e) return String(e);
+      if (typeof e === 'string') return e;
+      if (typeof e === 'object' && e !== null && 'message' in e) {
+        return (e as { message?: unknown }).message as string || String(e);
+      }
+      return String(e);
+    }
+
+    const safeMsg = extractMessage(err);
+    console.error('OpenAI API request failed:', safeMsg);
+    return res.status(502).json({ error: 'Online AI request failed', details: safeMsg });
   }
 });
 
