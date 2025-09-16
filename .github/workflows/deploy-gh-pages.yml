@@ -70,8 +70,16 @@ jobs:
           node -e "try{console.log(require.resolve('vite'))}catch(e){console.error('resolve error:',e.message);process.exit(0)}"
           echo "Show app/package.json (for workspace config)"
           sed -n '1,200p' app/package.json || true
-          echo "Running Vite build for app from repo root (outDir=./app/dist)"
-          npx --yes vite build --root ./app --outDir ./app/dist
+          echo "Running app workspace install and build"
+          # Ensure app workspace dependencies are installed (non-hoisted where appropriate)
+          npm --workspace=app ci --include=dev || true
+          echo "Running build via npm workspace (this runs the script defined in app/package.json)"
+          if npm --workspace=app run build --silent; then
+            echo "npm workspace build succeeded"
+          else
+            echo "npm workspace build failed; falling back to running vite from app directory with npx"
+            (cd app && npx --yes vite build) 
+          fi
           echo "Listing app/dist contents"
           ls -la app/dist || true
           
