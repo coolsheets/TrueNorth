@@ -45,23 +45,27 @@ jobs:
           npm ci --include=dev
           
       - name: Build
-        working-directory: ./app
         run: |
+          set -e
           echo "Node version: $(node -v)"
           echo "npm version: $(npm -v)"
-          echo "Installing app dependencies (including dev)"
+          echo "Environment vars relevant to Node/Vite"
+          echo "PWD=$(pwd)"
+          echo "BASE_URL=${BASE_URL:-$(node -e "console.log(process.env.BASE_URL||'unset')")}" || true
+          echo "Installing root dependencies (including dev)"
           npm ci --include=dev
-          echo "Listing node_modules/.bin"
-          ls -la node_modules/.bin || true
-          echo "Trying local vite --version"
-          ./node_modules/.bin/vite --version || npx vite --version || true
-          echo "Running build (prefer npm run build which uses local vite)"
-          if npm run build --silent; then
-            echo "Build succeeded"
-          else
-            echo "npm run build failed, attempting npx --yes vite build as fallback"
-            npx --yes vite build
-          fi
+          echo "Root node_modules path contents (top-level)"
+          ls -la node_modules || true
+          echo "Check where vite is (npm ls vite)"
+          npm ls vite --depth=0 || true
+          echo "Attempt to resolve vite from node's resolver"
+          node -e "try{console.log(require.resolve('vite'))}catch(e){console.error('resolve error:',e.message);process.exit(0)}"
+          echo "Show app/package.json (for workspace config)"
+          sed -n '1,200p' app/package.json || true
+          echo "Running Vite build for app from repo root (outDir=./app/dist)"
+          npx --yes vite build --root ./app --outDir ./app/dist
+          echo "Listing app/dist contents"
+          ls -la app/dist || true
           
       - name: Configure for GitHub Pages
         working-directory: ./app/dist
