@@ -4,11 +4,13 @@ on:
   workflow_dispatch:  # Manual triggering
   push:
     branches:
-      - main
+      - gh-pages
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    # Avoid running this workflow when the actor is the GitHub Actions bot
+    if: github.actor != 'github-actions[bot]'
     
     steps:
       - name: Checkout code
