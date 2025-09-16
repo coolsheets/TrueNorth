@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # Manual triggering
   push:
     branches:
-      - gh-pages
+      - main
 
 jobs:
   build-and-deploy:
@@ -15,6 +15,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          # Ensure we have full history for deploy logs if needed
+          fetch-depth: 0
+      - name: Ensure we're building latest main
+        run: |
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
         
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -96,3 +104,22 @@ jobs:
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}  # Use the automatic token
           commit-message: "Deploy to GitHub Pages [skip ci]"
+
+      - name: Smoke test deployed site
+        run: |
+          set -e
+          # Try the default GitHub Pages URL and the repository URL
+          REPO_OWNER="${{ github.repository_owner }}"
+          REPO_NAME="${{ github.event.repository.name || github.repository }}"
+          # Construct likely Pages URL (user/organization page will differ if it's a user site)
+          GH_PAGES_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "Checking ${GH_PAGES_URL}"
+          curl -I --max-time 10 "${GH_PAGES_URL}" | head -n 5 || true
+          # Also check root domain if CNAME present (optional)
+          if [ -f "app/dist/CNAME" ]; then
+            CUSTOM_DOMAIN=$(cat app/dist/CNAME | tr -d '\n')
+            echo "Custom domain detected: ${CUSTOM_DOMAIN}"
+            curl -I --max-time 10 "https://${CUSTOM_DOMAIN}" | head -n 5 || true
+          else
+            echo "No CNAME found; skipping custom domain check"
+          fi
