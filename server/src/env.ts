@@ -12,6 +12,7 @@ export const env = {
   jwtSecret: req('JWT_SECRET'),
   bucket: req('CLOUD_BUCKET'),
   region: req('CLOUD_REGION'),
-  openaiKey: req('OPENAI_API_KEY'),
+  // Make OpenAI key optional so server can start and provide clear errors when missing.
+  openaiKey: process.env['OPENAI_API_KEY'] || undefined,
   allowedOrigin: req('ALLOWED_ORIGIN')
 };
