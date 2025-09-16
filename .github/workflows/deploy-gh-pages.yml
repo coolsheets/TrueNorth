@@ -1,7 +1,10 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:  # Manual triggering only
+  workflow_dispatch:  # Manual triggering
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
