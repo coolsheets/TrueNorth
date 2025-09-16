@@ -1,8 +1,0 @@
-{
-  "name": "sw-server",
-  "version": "1.0.0",
-  "description": "Service Worker scope fix server",
-  "main": "sw-server.js",
-  "type": "module",
-  "private": true
-}
