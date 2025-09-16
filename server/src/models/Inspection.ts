@@ -18,6 +18,8 @@ items: [ItemSchema]
 
 const InspectionSchema = new Schema({
 userId: String,
+	// Local numeric ID from client devices (optional)
+	localId: Number,
 vehicle: {
 vin: String,
 year: Number,

@@ -8,11 +8,12 @@ function req(name: string): string {
 }
 
 export const env = {
-  mongoUri: req('MONGODB_URI'),
-  jwtSecret: req('JWT_SECRET'),
-  bucket: req('CLOUD_BUCKET'),
-  region: req('CLOUD_REGION'),
+  // Make MongoDB URI optional: allow server to start in environments without DB (admin pages will show helpful errors)
+  mongoUri: process.env['MONGODB_URI'] || undefined,
+  jwtSecret: process.env['JWT_SECRET'] || '',
+  bucket: process.env['CLOUD_BUCKET'] || '',
+  region: process.env['CLOUD_REGION'] || '',
   // Make OpenAI key optional so server can start and provide clear errors when missing.
   openaiKey: process.env['OPENAI_API_KEY'] || undefined,
-  allowedOrigin: req('ALLOWED_ORIGIN')
+  allowedOrigin: process.env['ALLOWED_ORIGIN'] || '*'
 };

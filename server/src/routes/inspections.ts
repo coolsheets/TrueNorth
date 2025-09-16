@@ -42,6 +42,11 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
     if (!Array.isArray(inspections)) {
       return res.status(400).json({ error: 'Expected an array of inspections' });
     }
+
+    // If MongoDB is not configured, return clear 503 so callers can handle gracefully
+    if (!process.env.MONGODB_URI && !process.env.MONGO_URI) {
+      return res.status(503).json({ error: 'MongoDB not configured in this environment' });
+    }
     
     interface ServerInspection {
       _id: string;
@@ -62,14 +67,19 @@ router.post('/sync', async (req: express.Request, res: express.Response) => {
       // Convert local data to match the mongoose model structure
       const formattedData = {
         ...inspectionData,
-        localId: id,
         updatedAt: new Date()
       };
-      
+
+      // Use $set / $setOnInsert to avoid strict mode upsert errors for fields not in schema
+      const update = {
+        $set: formattedData,
+        $setOnInsert: { localId: id, createdAt: new Date() }
+      };
+
       // Insert or update in MongoDB
       const result = await Inspection.findOneAndUpdate(
         { localId: id },
-        formattedData,
+        update,
         { upsert: true, new: true }
       );
       
