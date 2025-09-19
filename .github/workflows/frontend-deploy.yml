@@ -6,9 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pages: write
       id-token: write
 
@@ -29,7 +30,7 @@ jobs:
       - name: Build app
         env:
           # Optional: set this secret to point the built app at a live API endpoint
-          VITE_API_BASE: ${{ secrets.DEPLOY_VITE_API_BASE || '' }}
+          VITE_API_BASE: ${{ secrets.DEPLOY_VITE_API_BASE }}
         run: |
           cd app
           npm ci
@@ -41,7 +42,9 @@ jobs:
           path: app/dist
 
   deploy-pages:
-    needs: build-and-deploy
+    # Only deploy from approved branches
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/deploy'
+    needs: build
     runs-on: ubuntu-latest
     # Add environment configuration for GitHub Pages
     environment:
