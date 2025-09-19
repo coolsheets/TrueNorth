@@ -81,12 +81,13 @@ export const InspectionManagerAdmin: React.FC = () => {
   // Check API connection
   const checkApiConnection = async () => {
     if (!navigator.onLine) return false;
+    const apiBase = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE || '';
     
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch('/api/inspections/health', {
+      const response = await fetch(`${apiBase}/api/inspections/health`, {
         method: 'HEAD',
         signal: controller.signal
       });
@@ -357,7 +358,8 @@ export const InspectionManagerAdmin: React.FC = () => {
     
     setLoading(true);
     try {
-      const response = await fetch('/api/inspections');
+  const apiBase = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE || '';
+  const response = await fetch(`${apiBase}/api/inspections`);
       
       if (!response.ok) {
         throw new Error(`Server returned ${response.status}: ${response.statusText}`);

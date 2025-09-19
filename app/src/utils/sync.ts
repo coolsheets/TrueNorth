@@ -27,7 +27,8 @@ export const syncWithAtlas = async (): Promise<void> => {
     const lastSyncTimestamp = settings?.lastSyncTimestamp || null;
 
     // 3. Push to server and get server updates
-    const response = await fetch('/api/inspections/sync', {
+  const apiBase = (import.meta.env as { VITE_API_BASE?: string }).VITE_API_BASE || '';
+    const response = await fetch(`${apiBase}/api/inspections/sync`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
